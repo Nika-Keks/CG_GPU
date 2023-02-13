@@ -11,9 +11,17 @@ namespace DX = DirectX;
 Graphics::Graphics(HWND hWnd) :
 	bufferSize({ 0, 0 })
 {
+	RECT rect;
+	if (GetClientRect(hWnd, &rect))
+	{
+		bufferSize.widht = rect.right - rect.left;
+		bufferSize.height = rect.bottom - rect.top;
+	}
+
 	DXGI_SWAP_CHAIN_DESC sd = {};
-	sd.BufferDesc.Width = 0;
-	sd.BufferDesc.Height = 0;
+	ZeroMemory(&sd, sizeof(sd));
+	sd.BufferDesc.Width = bufferSize.widht;
+	sd.BufferDesc.Height = bufferSize.height;
 	sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	sd.BufferDesc.RefreshRate.Numerator = 0;
 	sd.BufferDesc.RefreshRate.Denominator = 0;
@@ -34,12 +42,7 @@ Graphics::Graphics(HWND hWnd) :
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-	RECT rect;
-	if (GetClientRect(hWnd, &rect))
-	{
-		bufferSize.widht = rect.right - rect.left;
-		bufferSize.height = rect.bottom - rect.top;
-	}
+	
 	// create device and front/back buffers, and swap chain and rendering context
 	D3D_FEATURE_LEVEL featureLevels[] = {
 		D3D_FEATURE_LEVEL_11_1,
@@ -83,7 +86,7 @@ Graphics::Graphics(HWND hWnd) :
 
 void Graphics::DrawTest(float angle, float x, float y)
 {
-	startEvent(L"DtawTest");
+	startEvent(L"DrawTest");
 	struct Vertex
 	{
 		struct
@@ -183,7 +186,7 @@ void Graphics::DrawTest(float angle, float x, float y)
 		}
 	};
 	Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantBuffer;
-	D3D11_BUFFER_DESC cbd;
+	D3D11_BUFFER_DESC cbd = { 0 };
 	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	cbd.Usage = D3D11_USAGE_DYNAMIC;
 	cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -209,7 +212,7 @@ void Graphics::DrawTest(float angle, float x, float y)
 
 
 	// configure viewport
-	D3D11_VIEWPORT vp;
+	D3D11_VIEWPORT vp = { 0 };
 	vp.Width = (float)bufferSize.widht;
 	vp.Height = (float)bufferSize.height;
 	vp.MinDepth = 0;
