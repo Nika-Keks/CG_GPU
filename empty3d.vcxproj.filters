@@ -83,6 +83,12 @@
     <FxCompile Include="src\VertexShader.hlsl">
       <Filter>src\shaders</Filter>
     </FxCompile>
+    <FxCompile Include="HDRShader.hlsl">
+      <Filter>src\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DownsampleShader.hlsl">
+      <Filter>src\shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
