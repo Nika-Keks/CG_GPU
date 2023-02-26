@@ -4,15 +4,24 @@ struct VSOut
 	float4 pos : SV_Position;
 };
 
-cbuffer CBuf
+cbuffer VP_CBuf : register(b0)
 {
-	matrix transform;
+	matrix vp_transform;
 };
 
-VSOut main( float3 pos : Position,float3 color : Color )
+cbuffer M_CBuf : register(b1)
+{
+	matrix model_transform;
+};
+
+
+
+
+VSOut main( float3 pos : Position, float4 color : Color )
 {
 	VSOut vso;
-	vso.pos = mul( float4(pos,1.0f),transform );
+	//vso.pos = mul(mul( float4(pos,1.0f),model_transform ), vp_transform);
+	vso.pos = mul( float4(pos,1.0f), vp_transform);
 	vso.color = color;
 	return vso;
 }

@@ -2,7 +2,9 @@
 #include "WinDef.h"
 #include <d3d11_1.h>
 #include "BaseException.h"
-
+#include "Camera.h"
+#include "Scene.h"
+#include "LightModel.h"
 
 class Graphics
 {
@@ -21,9 +23,12 @@ public:
 	void chSwapChain(int height, int width);
 	void EndFrame();
 	void ClearBuffer( float red,float green,float blue ) noexcept;
-	void DrawTest(float angle, float x, float y);
+	void DrawTest(Camera const& viewCamera, float angle, float x, float y);
+	void DrawScene(Scene& scene, Camera const& camera, LightModel& lightModel);
+
 private:
 
+	void setCamera(Camera const& camera); 
 	void startEvent(LPCWSTR);
 	void endEvent();
 
@@ -32,7 +37,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> pContext;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> pTarget;
 	Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation> pAnnotation;
-	
+
 	struct
 	{
 		int widht;
