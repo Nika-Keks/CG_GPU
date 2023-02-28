@@ -10,8 +10,9 @@ Texture2D ExposureTexture;
 
 struct PSInput
 {
-	float4 pos :		 SV_POSITION;
-	float2 texcoord :	 TEXCOORD;
+	float4 pos : SV_Position;
+	float3 color : Color;
+	float2 texcoord: TEXCOORD0;
 };
 
 float3 Uncharted2Tonemap(float3 x)
@@ -44,4 +45,5 @@ float4 main(PSInput i) : SV_Target
 	float3 whiteScale = 1.0f / Uncharted2Tonemap(WhiteLumen);
 
 	return float4(toneMappedCol * whiteScale, 1.0f);
+	//return float4(0.5f, 0.2f, 0.3f, 1);
 }

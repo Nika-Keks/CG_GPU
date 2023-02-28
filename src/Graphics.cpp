@@ -95,21 +95,35 @@ Graphics::Graphics(HWND hWnd) :
 	sd.MaxLOD = D3D11_FLOAT32_MAX;
 
 	m_pDevice->CreateSamplerState(&sd, m_pSamplerState.GetAddressOf());
+	m_pDevice->CreateSamplerState(&sd, m_pExposureSampler.GetAddressOf());
 
 	// create shaders
 	m_PSSimple = createPixelShader(L"PixelShader.cso");
 	m_VSSimple = createVertexShader(L"VertexShader.cso");
+	m_VSCopy = createVertexShader(L"CopyVertexShader.cso");
 	m_PSCopy = createPixelShader(L"CopyPixelShader.cso");
 	m_PSBrightness = createPixelShader(L"BrightnessShader.cso");
 	m_PSHdr = createPixelShader(L"HDRShader.cso");
 
 	updateRenderTargets(bufferSize.height, bufferSize.widht);
+	THROW_IF_FAILED(GtxError, m_pDevice->CreateRenderTargetView(
+		pBackBuffer.Get(),
+		nullptr,
+		&m_postprocessedRenderTarget.pRenderTargetView
+	));
 }
 
 Graphics::Geometry Graphics::createQuad(int height, int width)
 {
 	Geometry res;
 
+	/*Vertex vertices[] =
+	{
+		{-1.f,-1.f,0.f, 0,0,0,0 },
+		{ 1.f,-1.f,0.f, 0,0,0,0 },
+		{-1.f, 1.f,0.f, 0,0,0,0 },
+		{ 1.f, 1.f,0.f, 0,0,0,0 },
+	};*/
 	Vertex vertices[] =
 	{
 		{ 0.f,0.f,0.f, 0,0,0,1 },
@@ -148,7 +162,7 @@ Graphics::Geometry Graphics::createQuad(int height, int width)
 	const ConstantBuffer cb = 
 	{
 		{
-			DX::XMMatrixIdentity()
+			DX::XMMatrixIdentity() //*DX::XMMatrixScaling((float)width, (float)height, 1.f)
 		}
 	};
 	D3D11_BUFFER_DESC cbd = { 0 };
@@ -161,6 +175,7 @@ Graphics::Geometry Graphics::createQuad(int height, int width)
 	D3D11_SUBRESOURCE_DATA csd = {};
 	csd.pSysMem = &cb;
 	THROW_IF_FAILED(GtxError, m_pDevice->CreateBuffer(&cbd, &csd, &res.pConstantBuffer));
+	res.indicesSize = (UINT)std::size(indices);
 	return res;
 }
 
@@ -269,6 +284,7 @@ void Graphics::DrawTest(float angle, float x, float y)
 	{
 		{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
 		{ "Color",0,DXGI_FORMAT_R8G8B8A8_UNORM,0,12u,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "Texcoord",0,DXGI_FORMAT_R32G32_FLOAT,0,28u,D3D11_INPUT_PER_VERTEX_DATA,0 },
 	};
 	THROW_IF_FAILED(GtxError, m_pDevice->CreateInputLayout(
 		ied, (UINT)std::size(ied),
@@ -292,6 +308,7 @@ void Graphics::DrawTest(float angle, float x, float y)
 	// hdr
 	startEvent(L"CalculateAverageBrightness");
 
+	m_pContext->VSSetShader(m_VSCopy.Get(), nullptr, 0u);
 	m_pContext->PSSetShader(m_PSBrightness.Get(), nullptr, 0u);
 	downsampleTexture(m_sceneRenderTarget, m_scaledHDRTargets[0]);
 
@@ -302,17 +319,33 @@ void Graphics::DrawTest(float angle, float x, float y)
 
 	// tonemap
 	startEvent(L"RenderTonemapView");
-	m_pContext->IASetVertexBuffers(0u, 1u, box.pVertexBuffer.GetAddressOf(), &stride, &offset);
-	m_pContext->IASetIndexBuffer(box.pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
-	m_pContext->VSSetConstantBuffers(0u, 1u, box.pConstantBuffer.GetAddressOf());
-
 	m_pContext->PSSetShader(m_PSHdr.Get(), nullptr, 0u);
+
+	ID3D11ShaderResourceView* const pSRV2[2] = { nullptr, nullptr };
+	m_pContext->PSSetShaderResources(0u, 2u, pSRV2);
+
+	Geometry screenQuad = createQuad(bufferSize.height, bufferSize.widht);
+	m_pContext->IASetVertexBuffers(0u, 1u, screenQuad.pVertexBuffer.GetAddressOf(), &stride, &offset);
+	m_pContext->IASetIndexBuffer(screenQuad.pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
+	m_pContext->VSSetConstantBuffers(0u, 1u, screenQuad.pConstantBuffer.GetAddressOf());
+
 	ID3D11ShaderResourceView* tonemapTextures[2] = {
-		m_sceneRenderTarget.pShaderResourceView.Get(), 
+		m_sceneRenderTarget.pShaderResourceView.Get(),
 		m_scaledHDRTargets.back().pShaderResourceView.Get()
 	};
+	ID3D11SamplerState* const samplers[2] = { 
+		m_pSamplerState.Get(), 
+		m_pExposureSampler.Get() 
+	};
+
 	m_pContext->PSSetShaderResources(0u, 2u, tonemapTextures);
-	m_pContext->DrawIndexed((UINT)std::size(indices), 0u, 0u);
+	m_pContext->OMSetRenderTargets(1u, m_postprocessedRenderTarget.pRenderTargetView.GetAddressOf(), nullptr);
+	m_pContext->RSSetViewports(1u, &m_postprocessedRenderTarget.viewport);
+
+	m_pContext->PSSetSamplers(0, 2, samplers);
+
+	m_pContext->DrawIndexed(screenQuad.indicesSize, 0u, 0u);
+	
 	endEvent(); // RenderTonemapView
 
 	endEvent(); // DrawTest
@@ -320,27 +353,32 @@ void Graphics::DrawTest(float angle, float x, float y)
 
 void Graphics::downsampleTexture(const RenderTargetTexture& inputTex, const RenderTargetTexture& resultTex)
 {
-	ID3D11ShaderResourceView* const pSRV[1] = { NULL };
+	ID3D11ShaderResourceView* const pSRV[1] = { nullptr };
 	m_pContext->PSSetShaderResources(0u, 1u, pSRV);
 
 	ID3D11Texture2D* pTextureInterface = 0;
 	resultTex.pTexture2D->QueryInterface<ID3D11Texture2D>(&pTextureInterface);
 	D3D11_TEXTURE2D_DESC desc;
 	pTextureInterface->GetDesc(&desc);
-
 	Geometry screenQuad = createQuad(desc.Height, desc.Width);
+
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
 	m_pContext->IASetVertexBuffers(0u, 1u, screenQuad.pVertexBuffer.GetAddressOf(), &stride, &offset);
 	m_pContext->IASetIndexBuffer(screenQuad.pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
 	m_pContext->VSSetConstantBuffers(0u, 1u, screenQuad.pConstantBuffer.GetAddressOf());
 
+	m_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	m_pContext->OMSetRenderTargets(1u, resultTex.pRenderTargetView.GetAddressOf(), nullptr);
 	m_pContext->RSSetViewports(1u, &resultTex.viewport);
+
 	m_pContext->PSSetShaderResources(0u, 1u, inputTex.pShaderResourceView.GetAddressOf());
-	
 	m_pContext->PSSetSamplers(0, 1, m_pSamplerState.GetAddressOf());
-	m_pContext->Draw(4, 0);
+
+	m_pContext->DrawIndexed(screenQuad.indicesSize, 0u, 0u);
+
+	m_pContext->PSSetShaderResources(0u, 1u, pSRV);
 }
 
 Microsoft::WRL::ComPtr<ID3D11PixelShader> Graphics::createPixelShader(const wchar_t* psPath)
@@ -390,9 +428,8 @@ Graphics::~Graphics()
 
 void Graphics::updateRenderTargets(int height, int width)
 {
-	m_scaledHDRTargets.clear();
-	m_sceneRenderTarget.pRenderTargetView.Reset();
 	m_sceneRenderTarget = CreateTexture(height, width);
+	m_postprocessedRenderTarget = CreateTexture(height, width);
 
 	int rtv_num = static_cast<int>(std::floor(std::log2(std::min(width, height))));
 	m_scaledHDRTargets.push_back(CreateTexture(height, width));
@@ -407,8 +444,13 @@ void Graphics::chSwapChain(int height, int width)
 	bufferSize.widht = width;
 	bufferSize.height = height;
 
-	
+	m_scaledHDRTargets.clear();
+	m_postprocessedRenderTarget.pRenderTargetView.Reset();
+	m_sceneRenderTarget.pRenderTargetView.Reset();
 	m_pContext->ClearState();
+
+	updateRenderTargets(height, width);
+
 	if (m_pSwap.GetAddressOf())
 	{
 		THROW_IF_FAILED(GtxError,
@@ -416,17 +458,17 @@ void Graphics::chSwapChain(int height, int width)
 		);
 	}
 
-	updateRenderTargets(height, width);
-
 	Microsoft::WRL::ComPtr<ID3D11Resource> pBackBuffer;
+	m_postprocessedRenderTarget.pRenderTargetView.Reset();
 
 	THROW_IF_FAILED(GtxError,
 		m_pSwap->GetBuffer(0, __uuidof(ID3D11Resource), reinterpret_cast<void**>(pBackBuffer.GetAddressOf()))
 	);
+
 	THROW_IF_FAILED(GtxError, m_pDevice->CreateRenderTargetView(
 		pBackBuffer.Get(),
 		nullptr,
-		&m_sceneRenderTarget.pRenderTargetView
+		&m_postprocessedRenderTarget.pRenderTargetView
 	));
 }
 
@@ -454,6 +496,7 @@ void Graphics::ClearBuffer( float red,float green,float blue ) noexcept
 {
 	const float color[] = { red,green,blue,1.0f };
 	m_pContext->ClearRenderTargetView(m_sceneRenderTarget.pRenderTargetView.Get(), color);
+	m_pContext->ClearRenderTargetView(m_postprocessedRenderTarget.pRenderTargetView.Get(), color);
 	for (auto& rt : m_scaledHDRTargets)
 		m_pContext->ClearRenderTargetView(rt.pRenderTargetView.Get(), color);
 }

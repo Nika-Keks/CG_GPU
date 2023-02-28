@@ -58,6 +58,7 @@ private:
 	struct Geometry
 	{
 		Microsoft::WRL::ComPtr<ID3D11Buffer> pVertexBuffer;
+		int indicesSize;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> pIndexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantBuffer;
 	};
@@ -76,11 +77,14 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_pContext;
 	Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation> m_pAnnotation;
 	Microsoft::WRL::ComPtr<ID3DBlob> m_pVertexBlob;
-	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_pSamplerState;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_pSamplerState; 
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_pExposureSampler;
 	RenderTargetTexture m_sceneRenderTarget;
+	RenderTargetTexture m_postprocessedRenderTarget;
 	
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VSSimple;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PSSimple;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VSCopy;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PSCopy;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PSBrightness;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PSHdr;
