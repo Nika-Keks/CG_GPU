@@ -99,8 +99,8 @@ Graphics::Graphics(HWND hWnd) :
 
 	// create shaders
 	m_PSSimple = createPixelShader(L"PixelShader.cso");
-	m_VSSimple = createVertexShader(L"VertexShader.cso");
-	m_VSCopy = createVertexShader(L"CopyVertexShader.cso");
+	m_VSSimple = createVertexShader(L"VertexShader.cso", &m_pSimpleVSBlob);
+	m_VSCopy = createVertexShader(L"CopyVertexShader.cso", &m_pCopyVSBlob);
 	m_PSCopy = createPixelShader(L"CopyPixelShader.cso");
 	m_PSBrightness = createPixelShader(L"BrightnessShader.cso");
 	m_PSHdr = createPixelShader(L"HDRShader.cso");
@@ -117,19 +117,12 @@ Graphics::Geometry Graphics::createQuad(int height, int width)
 {
 	Geometry res;
 
-	/*Vertex vertices[] =
+	ProcessTextureVertex vertices[] =
 	{
-		{-1.f,-1.f,0.f, 0,0,0,0 },
-		{ 1.f,-1.f,0.f, 0,0,0,0 },
-		{-1.f, 1.f,0.f, 0,0,0,0 },
-		{ 1.f, 1.f,0.f, 0,0,0,0 },
-	};*/
-	Vertex vertices[] =
-	{
-		{ 0.f,0.f,0.f, 0,0,0,1 },
-		{ 1.f,0.f,0.f, 0,0,0,1 },
-		{ 0.f,1.f,0.f, 0,0,0,1 },
-		{ 1.f,1.f,0.f, 0,0,0,1 },
+		{-1.f,-1.f,0.f, 0,0,0,1, 0.f, 1.f},
+		{ 1.f,-1.f,0.f, 0,0,0,1, 1.f, 1.f},
+		{-1.f, 1.f,0.f, 0,0,0,1, 0.f, 0.f},
+		{ 1.f, 1.f,0.f, 0,0,0,1, 1.f, 0.f},
 	};
 	D3D11_BUFFER_DESC bd;
 	ZeroMemory(&bd, sizeof(bd));
@@ -147,7 +140,7 @@ Graphics::Geometry Graphics::createQuad(int height, int width)
 	THROW_IF_FAILED(GtxError, m_pDevice->CreateBuffer(&bd, &sd, &res.pVertexBuffer));
 
 
-	const unsigned short indices[] = { 0,2,1,2,3,1 };
+	const unsigned short indices[] = { 0,3,1,3,0,2 };
 	D3D11_BUFFER_DESC ibd = {};
 	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	ibd.Usage = D3D11_USAGE_DEFAULT;
@@ -158,23 +151,6 @@ Graphics::Geometry Graphics::createQuad(int height, int width)
 	D3D11_SUBRESOURCE_DATA isd = {};
 	isd.pSysMem = indices;
 	THROW_IF_FAILED(GtxError, m_pDevice->CreateBuffer(&ibd, &isd, &res.pIndexBuffer));
-
-	const ConstantBuffer cb = 
-	{
-		{
-			DX::XMMatrixIdentity() //*DX::XMMatrixScaling((float)width, (float)height, 1.f)
-		}
-	};
-	D3D11_BUFFER_DESC cbd = { 0 };
-	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbd.Usage = D3D11_USAGE_DYNAMIC;
-	cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	cbd.MiscFlags = 0u;
-	cbd.ByteWidth = sizeof(cb);
-	cbd.StructureByteStride = 0u;
-	D3D11_SUBRESOURCE_DATA csd = {};
-	csd.pSysMem = &cb;
-	THROW_IF_FAILED(GtxError, m_pDevice->CreateBuffer(&cbd, &csd, &res.pConstantBuffer));
 	res.indicesSize = (UINT)std::size(indices);
 	return res;
 }
@@ -279,22 +255,33 @@ void Graphics::DrawTest(float angle, float x, float y)
 	m_pContext->VSSetShader(m_VSSimple.Get(), nullptr, 0u);
 
 	// input (vertex) layout (2d position only)
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> pInputLayout;
-	const D3D11_INPUT_ELEMENT_DESC ied[] =
+	const D3D11_INPUT_ELEMENT_DESC inputDescSimple[] =
+	{
+		{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "Color",0,DXGI_FORMAT_R8G8B8A8_UNORM,0,12u,D3D11_INPUT_PER_VERTEX_DATA,0 },
+	};
+	THROW_IF_FAILED(GtxError, m_pDevice->CreateInputLayout(
+		inputDescSimple, (UINT)std::size(inputDescSimple),
+		m_pSimpleVSBlob->GetBufferPointer(),
+		m_pSimpleVSBlob->GetBufferSize(),
+		&m_pInputLayout
+	));
+
+	const D3D11_INPUT_ELEMENT_DESC inputDescCopy[] =
 	{
 		{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
 		{ "Color",0,DXGI_FORMAT_R8G8B8A8_UNORM,0,12u,D3D11_INPUT_PER_VERTEX_DATA,0 },
 		{ "Texcoord",0,DXGI_FORMAT_R32G32_FLOAT,0,28u,D3D11_INPUT_PER_VERTEX_DATA,0 },
 	};
 	THROW_IF_FAILED(GtxError, m_pDevice->CreateInputLayout(
-		ied, (UINT)std::size(ied),
-		m_pVertexBlob->GetBufferPointer(),
-		m_pVertexBlob->GetBufferSize(),
-		&pInputLayout
+		inputDescCopy, (UINT)std::size(inputDescCopy),
+		m_pCopyVSBlob->GetBufferPointer(),
+		m_pCopyVSBlob->GetBufferSize(),
+		&m_pProcessTextureLayout
 	));
 
 	// bind vertex layout
-	m_pContext->IASetInputLayout(pInputLayout.Get());
+	m_pContext->IASetInputLayout(m_pInputLayout.Get());
 
 	// bind render target
 	m_pContext->OMSetRenderTargets(1u, m_sceneRenderTarget.pRenderTargetView.GetAddressOf(), nullptr);
@@ -307,9 +294,10 @@ void Graphics::DrawTest(float angle, float x, float y)
 
 	// hdr
 	startEvent(L"CalculateAverageBrightness");
-
+	
 	m_pContext->VSSetShader(m_VSCopy.Get(), nullptr, 0u);
 	m_pContext->PSSetShader(m_PSBrightness.Get(), nullptr, 0u);
+	m_pContext->IASetInputLayout(m_pProcessTextureLayout.Get());
 	downsampleTexture(m_sceneRenderTarget, m_scaledHDRTargets[0]);
 
 	m_pContext->PSSetShader(m_PSCopy.Get(), nullptr, 0u);
@@ -390,11 +378,11 @@ Microsoft::WRL::ComPtr<ID3D11PixelShader> Graphics::createPixelShader(const wcha
 	return pPixelShader;
 }
 
-Microsoft::WRL::ComPtr<ID3D11VertexShader> Graphics::createVertexShader(const wchar_t* vsPath)
+Microsoft::WRL::ComPtr<ID3D11VertexShader> Graphics::createVertexShader(const wchar_t* vsPath, ID3DBlob** vertexBlob)
 {
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> pVertexShader;
-	THROW_IF_FAILED(GtxError, D3DReadFileToBlob(vsPath, &m_pVertexBlob));
-	THROW_IF_FAILED(GtxError, m_pDevice->CreateVertexShader(m_pVertexBlob->GetBufferPointer(), m_pVertexBlob->GetBufferSize(), nullptr, &pVertexShader));
+	THROW_IF_FAILED(GtxError, D3DReadFileToBlob(vsPath, vertexBlob));
+	THROW_IF_FAILED(GtxError, m_pDevice->CreateVertexShader((**vertexBlob).GetBufferPointer(), (**vertexBlob).GetBufferSize(), nullptr, &pVertexShader));
 	return pVertexShader;
 }
 

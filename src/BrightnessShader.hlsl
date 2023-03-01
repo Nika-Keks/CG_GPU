@@ -6,7 +6,7 @@ static const float3 ChannelsWeight = float3(0.2126f, 0.7151f, 0.0722f);
 struct PSInput
 {
 	float4 pos : SV_Position;
-	float3 color : Color;
+	float4 color : Color;
 	float2 texcoord: TEXCOORD0;
 };
 

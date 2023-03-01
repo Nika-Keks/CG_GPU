@@ -50,6 +50,28 @@ private:
 		} color;
 	};
 
+	struct ProcessTextureVertex 
+	{
+		struct
+		{
+			float x;
+			float y;
+			float z;
+		} pos;
+		struct
+		{
+			unsigned char r;
+			unsigned char g;
+			unsigned char b;
+			unsigned char a;
+		} color;
+		struct
+		{
+			float x;
+			float y;
+		} texcoord;
+	};
+
 	struct ConstantBuffer
 	{
 		DirectX::XMMATRIX transform;
@@ -66,7 +88,7 @@ private:
 	void startEvent(LPCWSTR);
 	void endEvent();
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> createPixelShader(const wchar_t* psPath);
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> createVertexShader(const wchar_t* vsPath);
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> createVertexShader(const wchar_t* vsPath, ID3DBlob** vertexBlob);
 	RenderTargetTexture CreateTexture(int height, int width);
 	void downsampleTexture(const RenderTargetTexture& inputTex, const RenderTargetTexture& resultTex);
 	void updateRenderTargets(int height, int width);
@@ -76,9 +98,14 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain> m_pSwap;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_pContext;
 	Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation> m_pAnnotation;
-	Microsoft::WRL::ComPtr<ID3DBlob> m_pVertexBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> m_pSimpleVSBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> m_pCopyVSBlob;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_pSamplerState; 
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_pExposureSampler;
+
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_pInputLayout;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_pProcessTextureLayout;
+
 	RenderTargetTexture m_sceneRenderTarget;
 	RenderTargetTexture m_postprocessedRenderTarget;
 	

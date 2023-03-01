@@ -4,7 +4,7 @@ Texture2D Texture;
 struct PSInput
 {
 	float4 pos : SV_Position;
-	float3 color : Color;
+	float4 color : Color;
 	float2 texcoord: TEXCOORD0;
 };
 
