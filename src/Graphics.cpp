@@ -97,6 +97,21 @@ Graphics::Graphics(HWND hWnd) :
 	m_pDevice->CreateSamplerState(&sd, m_pSamplerState.GetAddressOf());
 	m_pDevice->CreateSamplerState(&sd, m_pExposureSampler.GetAddressOf());
 
+	// create cpu average lumen texture 
+	D3D11_TEXTURE2D_DESC td;
+	ZeroMemory(&td, sizeof(td));
+	td.Width = 1;
+	td.Height = 1;
+	td.MipLevels = 1;
+	td.ArraySize = 1;
+	td.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	td.SampleDesc.Count = 1;
+	td.SampleDesc.Quality = 0;
+	td.Usage = D3D11_USAGE_DEFAULT;
+	td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	td.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+	THROW_IF_FAILED(GtxError, m_pDevice->CreateTexture2D(&td, nullptr, &m_averageLumenCPUTexture));
+
 	// create shaders
 	m_PSSimple = createPixelShader(L"PixelShader.cso");
 	m_VSSimple = createVertexShader(L"VertexShader.cso", &m_pSimpleVSBlob);
@@ -117,41 +132,33 @@ Graphics::Geometry Graphics::createQuad(int height, int width)
 {
 	Geometry res;
 
-	ProcessTextureVertex vertices[] =
-	{
-		{-1.f,-1.f,0.f, 0,0,0,1, 0.f, 1.f},
-		{ 1.f,-1.f,0.f, 0,0,0,1, 1.f, 1.f},
-		{-1.f, 1.f,0.f, 0,0,0,1, 0.f, 0.f},
-		{ 1.f, 1.f,0.f, 0,0,0,1, 1.f, 0.f},
-	};
 	D3D11_BUFFER_DESC bd;
 	ZeroMemory(&bd, sizeof(bd));
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.CPUAccessFlags = 0u;
 	bd.MiscFlags = 0u;
-	bd.ByteWidth = sizeof(vertices);
-	bd.StructureByteStride = sizeof(Vertex);
+	bd.ByteWidth = sizeof(m_quad_vertices);
+	bd.StructureByteStride = sizeof(ProcessTextureVertex);
 
 	D3D11_SUBRESOURCE_DATA sd = {};
 	ZeroMemory(&sd, sizeof(sd));
-	sd.pSysMem = vertices;
+	sd.pSysMem = m_quad_vertices;
 
 	THROW_IF_FAILED(GtxError, m_pDevice->CreateBuffer(&bd, &sd, &res.pVertexBuffer));
 
 
-	const unsigned short indices[] = { 0,3,1,3,0,2 };
 	D3D11_BUFFER_DESC ibd = {};
 	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	ibd.Usage = D3D11_USAGE_DEFAULT;
 	ibd.CPUAccessFlags = 0u;
 	ibd.MiscFlags = 0u;
-	ibd.ByteWidth = sizeof(indices);
+	ibd.ByteWidth = sizeof(m_quad_indices);
 	ibd.StructureByteStride = sizeof(unsigned short);
 	D3D11_SUBRESOURCE_DATA isd = {};
-	isd.pSysMem = indices;
+	isd.pSysMem = m_quad_indices;
 	THROW_IF_FAILED(GtxError, m_pDevice->CreateBuffer(&ibd, &isd, &res.pIndexBuffer));
-	res.indicesSize = (UINT)std::size(indices);
+	res.indicesSize = (UINT)std::size(m_quad_indices);
 	return res;
 }
 
@@ -186,8 +193,8 @@ void Graphics::DrawTest(float angle, float x, float y)
 	THROW_IF_FAILED(GtxError, m_pDevice->CreateBuffer(&bd, &sd, &box.pVertexBuffer));
 
 	// Bind vertex buffer to pipeline
-	const UINT stride = sizeof(Vertex);
-	const UINT offset = 0u;
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0u;
 	m_pContext->IASetVertexBuffers(0u, 1u, box.pVertexBuffer.GetAddressOf(), &stride, &offset);
 
 
@@ -218,7 +225,7 @@ void Graphics::DrawTest(float angle, float x, float y)
 
 	// create constant buffer for transformation matrix
 	
-	const ConstantBuffer cb =
+	const VSConstantBuffer cb =
 	{
 		{
 			DX::XMMatrixTranspose(
@@ -271,7 +278,7 @@ void Graphics::DrawTest(float angle, float x, float y)
 	{
 		{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
 		{ "Color",0,DXGI_FORMAT_R8G8B8A8_UNORM,0,12u,D3D11_INPUT_PER_VERTEX_DATA,0 },
-		{ "Texcoord",0,DXGI_FORMAT_R32G32_FLOAT,0,28u,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "Texcoord",0,DXGI_FORMAT_R32G32_FLOAT,0,16u,D3D11_INPUT_PER_VERTEX_DATA,0 },
 	};
 	THROW_IF_FAILED(GtxError, m_pDevice->CreateInputLayout(
 		inputDescCopy, (UINT)std::size(inputDescCopy),
@@ -303,37 +310,41 @@ void Graphics::DrawTest(float angle, float x, float y)
 	m_pContext->PSSetShader(m_PSCopy.Get(), nullptr, 0u);
 	for (size_t i = 1; i < m_scaledHDRTargets.size(); i++)
 		downsampleTexture(m_scaledHDRTargets[i-1], m_scaledHDRTargets[i]);
+
+	//m_pContext->OMSetRenderTargets(1u, m_postprocessedRenderTarget.pRenderTargetView.GetAddressOf(), nullptr);
+	//m_pContext->RSSetViewports(1u, &m_postprocessedRenderTarget.viewport);
+	//D3D11_MAPPED_SUBRESOURCE averageTextureData;
+	//m_pContext->CopyResource(m_averageLumenCPUTexture.Get(), m_scaledHDRTargets.back().pTexture2D.Get());
+	//THROW_IF_FAILED(GtxError, m_pContext->Map(m_averageLumenCPUTexture.Get(), 0, D3D11_MAP_READ, 0, &averageTextureData));
+	//float averageLogBrightness = std::exp(*(float*)averageTextureData.pData) - 1;
+	//m_pContext->Unmap(m_averageLumenCPUTexture.Get(), 0u);
+	//m_prevExposure = averageLogBrightness;
+	m_prevExposure = 1;
+
 	endEvent(); // CalculateAverageBrightness
 
 	// tonemap
 	startEvent(L"RenderTonemapView");
 	m_pContext->PSSetShader(m_PSHdr.Get(), nullptr, 0u);
-
-	ID3D11ShaderResourceView* const pSRV2[2] = { nullptr, nullptr };
-	m_pContext->PSSetShaderResources(0u, 2u, pSRV2);
-
-	Geometry screenQuad = createQuad(bufferSize.height, bufferSize.widht);
-	m_pContext->IASetVertexBuffers(0u, 1u, screenQuad.pVertexBuffer.GetAddressOf(), &stride, &offset);
-	m_pContext->IASetIndexBuffer(screenQuad.pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
-	m_pContext->VSSetConstantBuffers(0u, 1u, screenQuad.pConstantBuffer.GetAddressOf());
-
-	ID3D11ShaderResourceView* tonemapTextures[2] = {
-		m_sceneRenderTarget.pShaderResourceView.Get(),
-		m_scaledHDRTargets.back().pShaderResourceView.Get()
-	};
-	ID3D11SamplerState* const samplers[2] = { 
-		m_pSamplerState.Get(), 
-		m_pExposureSampler.Get() 
-	};
-
-	m_pContext->PSSetShaderResources(0u, 2u, tonemapTextures);
-	m_pContext->OMSetRenderTargets(1u, m_postprocessedRenderTarget.pRenderTargetView.GetAddressOf(), nullptr);
-	m_pContext->RSSetViewports(1u, &m_postprocessedRenderTarget.viewport);
-
-	m_pContext->PSSetSamplers(0, 2, samplers);
-
-	m_pContext->DrawIndexed(screenQuad.indicesSize, 0u, 0u);
 	
+	const HDRConstantBuffer hdrcb = { m_prevExposure };
+	D3D11_BUFFER_DESC hdrcbDesc = { 0 };
+	hdrcbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	hdrcbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	hdrcbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	hdrcbDesc.MiscFlags = 0u;
+	hdrcbDesc.ByteWidth = sizeof(cb);
+	hdrcbDesc.StructureByteStride = 0u;
+	D3D11_SUBRESOURCE_DATA hdrsd = {};
+	hdrsd.pSysMem = &cb;
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> PSConstantBuffer;
+
+	THROW_IF_FAILED(GtxError, m_pDevice->CreateBuffer(&hdrcbDesc, &hdrsd, &PSConstantBuffer));
+
+	m_pContext->PSSetConstantBuffers(0u, 1u, PSConstantBuffer.GetAddressOf());
+	downsampleTexture(m_sceneRenderTarget, m_postprocessedRenderTarget);
+
 	endEvent(); // RenderTonemapView
 
 	endEvent(); // DrawTest
@@ -350,8 +361,8 @@ void Graphics::downsampleTexture(const RenderTargetTexture& inputTex, const Rend
 	pTextureInterface->GetDesc(&desc);
 	Geometry screenQuad = createQuad(desc.Height, desc.Width);
 
-	const UINT stride = sizeof(Vertex);
-	const UINT offset = 0u;
+	UINT stride = sizeof(ProcessTextureVertex);
+	UINT offset = 0u;
 	m_pContext->IASetVertexBuffers(0u, 1u, screenQuad.pVertexBuffer.GetAddressOf(), &stride, &offset);
 	m_pContext->IASetIndexBuffer(screenQuad.pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
 	m_pContext->VSSetConstantBuffers(0u, 1u, screenQuad.pConstantBuffer.GetAddressOf());

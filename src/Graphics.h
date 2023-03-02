@@ -72,10 +72,25 @@ private:
 		} texcoord;
 	};
 
-	struct ConstantBuffer
+	struct VSConstantBuffer
 	{
 		DirectX::XMMATRIX transform;
 	};
+
+	struct HDRConstantBuffer
+	{
+		float averageLumen;
+	};
+
+	ProcessTextureVertex m_quad_vertices[4] =
+	{
+		{-1.f,-1.f,0.f, 0,0,0,1, 0.f, 1.f},
+		{ 1.f,-1.f,0.f, 0,0,0,1, 1.f, 1.f},
+		{-1.f, 1.f,0.f, 0,0,0,1, 0.f, 0.f},
+		{ 1.f, 1.f,0.f, 0,0,0,1, 1.f, 0.f},
+	};
+
+	const unsigned short m_quad_indices[6] = { 0,3,1,3,0,2 };
 
 	struct Geometry
 	{
@@ -108,6 +123,7 @@ private:
 
 	RenderTargetTexture m_sceneRenderTarget;
 	RenderTargetTexture m_postprocessedRenderTarget;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_averageLumenCPUTexture;
 	
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VSSimple;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PSSimple;
@@ -118,7 +134,7 @@ private:
 
 	// HDR
 	std::vector<RenderTargetTexture> m_scaledHDRTargets;
-	RenderTargetTexture m_prevExposure;
+	float m_prevExposure = 0;
 	
 	struct
 	{

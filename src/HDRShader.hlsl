@@ -5,14 +5,16 @@ static const float lumMax = 1.0f;
 sampler SceneTextureSampler;
 Texture2D SceneTexture;
 
-sampler ExposureTextureSampler;
-Texture2D ExposureTexture;
-
 struct PSInput
 {
 	float4 pos : SV_Position;
 	float4 color : Color;
 	float2 texcoord: TEXCOORD0;
+};
+
+cbuffer CBuf
+{
+	float averageLumen;
 };
 
 float3 Uncharted2Tonemap(float3 x)
@@ -37,13 +39,9 @@ float4 main(PSInput i) : SV_Target
 {
 	float3 color = SceneTexture.Sample(SceneTextureSampler, i.texcoord).rgb;
 
-	float lum = ExposureTexture.Sample(ExposureTextureSampler, float2(0.5f, 0.5f)).r;
-	lum = exp(lum) - 1;
-
-	float E = getExposition(lum);
+	float E = getExposition(averageLumen);
 	float3 toneMappedCol = Uncharted2Tonemap(color * E);
 	float3 whiteScale = 1.0f / Uncharted2Tonemap(WhiteLumen);
 
 	return float4(toneMappedCol * whiteScale, 1.0f);
-	//return float4(0.5f, 0.2f, 0.3f, 1);
 }
