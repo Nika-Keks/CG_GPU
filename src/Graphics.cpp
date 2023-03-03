@@ -107,8 +107,8 @@ Graphics::Graphics(HWND hWnd) :
 	td.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	td.SampleDesc.Count = 1;
 	td.SampleDesc.Quality = 0;
-	td.Usage = D3D11_USAGE_DEFAULT;
-	td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	td.Usage = D3D11_USAGE_STAGING;
+	td.BindFlags = 0;
 	td.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 	THROW_IF_FAILED(GtxError, m_pDevice->CreateTexture2D(&td, nullptr, &m_averageLumenCPUTexture));
 
@@ -311,15 +311,15 @@ void Graphics::DrawTest(float angle, float x, float y)
 	for (size_t i = 1; i < m_scaledHDRTargets.size(); i++)
 		downsampleTexture(m_scaledHDRTargets[i-1], m_scaledHDRTargets[i]);
 
-	//m_pContext->OMSetRenderTargets(1u, m_postprocessedRenderTarget.pRenderTargetView.GetAddressOf(), nullptr);
-	//m_pContext->RSSetViewports(1u, &m_postprocessedRenderTarget.viewport);
-	//D3D11_MAPPED_SUBRESOURCE averageTextureData;
-	//m_pContext->CopyResource(m_averageLumenCPUTexture.Get(), m_scaledHDRTargets.back().pTexture2D.Get());
-	//THROW_IF_FAILED(GtxError, m_pContext->Map(m_averageLumenCPUTexture.Get(), 0, D3D11_MAP_READ, 0, &averageTextureData));
-	//float averageLogBrightness = std::exp(*(float*)averageTextureData.pData) - 1;
-	//m_pContext->Unmap(m_averageLumenCPUTexture.Get(), 0u);
-	//m_prevExposure = averageLogBrightness;
-	m_prevExposure = 1;
+	m_pContext->OMSetRenderTargets(1u, m_postprocessedRenderTarget.pRenderTargetView.GetAddressOf(), nullptr);
+	m_pContext->RSSetViewports(1u, &m_postprocessedRenderTarget.viewport);
+    D3D11_MAPPED_SUBRESOURCE averageTextureData;
+	ZeroMemory(&averageTextureData, sizeof(averageTextureData));
+	m_pContext->CopyResource(m_averageLumenCPUTexture.Get(), m_scaledHDRTargets.back().pTexture2D.Get());
+	THROW_IF_FAILED(GtxError, m_pContext->Map(m_averageLumenCPUTexture.Get(), 0, D3D11_MAP_READ, 0, &averageTextureData));
+	float averageLogBrightness = std::exp(*(float*)averageTextureData.pData) - 1.0f;
+	m_pContext->Unmap(m_averageLumenCPUTexture.Get(), 0u);
+	m_prevExposure = averageLogBrightness;
 
 	endEvent(); // CalculateAverageBrightness
 
