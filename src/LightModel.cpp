@@ -140,6 +140,7 @@ void LightModel::applyTonemapEffect(
 	for (size_t i = 1; i < m_scaledHDRTargets.size(); i++)
 		processTexture(m_scaledHDRTargets[i - 1], m_scaledHDRTargets[i], pDevice, pContext);
 
+	pContext->OMSetRenderTargets(0, nullptr, nullptr);
 	resultRTT->set(pDevice, pContext);
 
 	D3D11_MAPPED_SUBRESOURCE averageTextureData;
