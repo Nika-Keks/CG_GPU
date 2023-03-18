@@ -47,6 +47,9 @@ Cube::Cube(DX::XMVECTOR const& posiiton, float sideSize):
 		3,3,3, 3,3,3,
 		0,0,0, 0,0,0,
 	};
+	DX::XMFLOAT3 v2F;
+	DX::XMStoreFloat3(&v2F, posiiton);
+	m_transform = DX::XMMatrixTranspose(DX::XMMatrixTranslation(v2F.x, v2F.y, v2F.z));
 }
 
 void Cube::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice, Microsoft::WRL::ComPtr<ID3D11DeviceContext>const& pContext)
@@ -107,13 +110,9 @@ void Cube::updateModelBuffer(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice
 		DirectX::XMMATRIX transform;
 	};
 
-	const ConstantBuffer cb =
+	const ConstantBuffer cb
 	{
-		{
-			DX::XMMatrixTranspose(
-				DX::XMMatrixTranslation(0.f,0.f,4.0f)
-			)
-		}
+		m_transform
 	};
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantBuffer;

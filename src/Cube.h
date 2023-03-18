@@ -44,5 +44,5 @@ private:
 	std::vector<unsigned short> m_vIndices;
 	std::vector<DX::XMFLOAT3> m_normals;
 	std::vector<unsigned short> m_nIndeces;
-	DX::XMVECTOR m_position;
+	DirectX::XMMATRIX m_transform;
 };
