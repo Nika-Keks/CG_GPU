@@ -1,5 +1,6 @@
 #include <DirectXMath.h>
 #include "Cube.h"
+#include "Defines.h"
 
 namespace DX = DirectX;
 
@@ -52,7 +53,9 @@ Cube::Cube(DX::XMVECTOR const& posiiton, float sideSize):
 	m_transform = DX::XMMatrixTranspose(DX::XMMatrixTranslation(v2F.x, v2F.y, v2F.z));
 }
 
-void Cube::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice, Microsoft::WRL::ComPtr<ID3D11DeviceContext>const& pContext)
+void Cube::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext>const& pContext,
+	PBRPixelShader* pixelShader)
 {
 	if (m_pVertexBuffer == nullptr)
 		initResurce(pDevice, pContext);
@@ -63,7 +66,10 @@ void Cube::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice, Microsoft:
 	updateModelBuffer(pDevice, pContext);
 
 	pContext->IASetVertexBuffers(0u, 1u, m_pVertexBuffer.GetAddressOf(), &stride, &offset);
-	//pContext->IASetIndexBuffer(m_pVIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
+#if USE_PBR_SHADER
+	pixelShader->CreateConstantBuffer(1, &m_pbrParams);
+	pixelShader->SetConstantBuffers();
+#endif
 	pContext->Draw((UINT)m_vIndices.size(), 0u);
 }
 
@@ -129,4 +135,14 @@ void Cube::updateModelBuffer(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice
 
 	// bind constant buffer to vertex shader
 	pContext->VSSetConstantBuffers(1u, 1u, pConstantBuffer.GetAddressOf());
+}
+
+const PBRParams Cube::getPBRParams()
+{
+	return m_pbrParams;
+}
+
+void Cube::setPBRParams(PBRParams params)
+{
+	m_pbrParams = params;
 }
