@@ -5,14 +5,12 @@
 Sphere::Sphere(DX::XMVECTOR const& position, float radius)
 	: m_pVertexBuffer(nullptr)
 {
-	const float PI = 3.141592653589793238463f;
-
 	for (size_t v = 0; v < s_vSamplingSize; v++)
 	{
-		float theta = v / (s_vSamplingSize - 1.0f) * PI;
+		float theta = v / (s_vSamplingSize - 1.0f) * DX::XM_PI;
 		for (size_t h = 0; h < s_hSamplingSize; h++)
 		{
-			float phi = h / (s_hSamplingSize - 1.0f) * 2 * PI;
+			float phi = h / (s_hSamplingSize - 1.0f) * 2 * DX::XM_PI;
 			float x = sin(theta) * sin(phi);
 			float y = cos(theta);
 			float z = sin(theta) * cos(phi);
@@ -45,7 +43,7 @@ void Sphere::render(
 	PBRPixelShader* pixelShader)
 {
 	if (m_pVertexBuffer == nullptr)
-		initResurce(pDevice, pContext);
+		initResource(pDevice, pContext);
 
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
@@ -61,7 +59,7 @@ void Sphere::render(
 	pContext->Draw((UINT)m_vIndices.size(), 0u);
 }
 
-void Sphere::initResurce(
+void Sphere::initResource(
 	Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)
 {

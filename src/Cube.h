@@ -8,7 +8,7 @@ namespace DX = DirectX;
 class Cube : public PhysicallyDrawable
 {
 public:
-	Cube(DX::XMVECTOR const& posiiton, float sideSize);
+	Cube(DX::XMVECTOR const& position, float sideSize);
 	void render(
 		Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext,
@@ -17,7 +17,7 @@ public:
 	void setPBRParams(PBRParams params) override;
 
 private:
-	void initResurce(
+	void initResource(
 		Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext);
 

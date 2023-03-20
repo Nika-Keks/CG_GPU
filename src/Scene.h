@@ -22,7 +22,7 @@ public:
 
 private:
 
-	void initResurses(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
+	void initResourses(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
 		Microsoft::WRL::ComPtr < ID3D11DeviceContext> const& pContext);
 
 	std::vector<std::shared_ptr<PhysicallyDrawable>> m_objects;
