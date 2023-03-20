@@ -127,8 +127,6 @@ void Graphics::DrawTest(Camera const& viewCamera, float angle, float x, float y)
 	// bind constant buffer to vertex shader
 	m_pContext->VSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
 
-
-
 	// bind render target
 	m_sceneRenderTarget->set(m_pDevice, m_pContext);
 
@@ -181,13 +179,10 @@ void Graphics::setCamera(Camera const& camera)
 	{
 		{
 			DX::XMMatrixTranspose(
-				//DX::XMMatrixRotationY(angle) *
-				//DX::XMMatrixRotationZ(angle)*
 				DX::XMMatrixScaling(
 					std::min(1.f, (float)bufferSize.height / (float)bufferSize.widht),
 					std::min(1.f, (float)bufferSize.widht / (float)bufferSize.height),
 					1.f) *
-				//DX::XMMatrixTranslation(0.f,0.f,4.0f) *
 				camera.getView() *
 				DX::XMMatrixPerspectiveLH(
 					DX::XM_PIDIV4,

@@ -4,9 +4,8 @@
 
 namespace DX = DirectX;
 
-Cube::Cube(DX::XMVECTOR const& posiiton, float sideSize):
+Cube::Cube(DX::XMVECTOR const& position, float sideSize):
 	m_pVertexBuffer(nullptr)
-	//m_pVIndexBuffer(nullptr)
 {
 	float hufSize = sideSize / 2;
 	m_vertices =
@@ -49,7 +48,7 @@ Cube::Cube(DX::XMVECTOR const& posiiton, float sideSize):
 		0,0,0, 0,0,0,
 	};
 	DX::XMFLOAT3 v2F;
-	DX::XMStoreFloat3(&v2F, posiiton);
+	DX::XMStoreFloat3(&v2F, position);
 	m_transform = DX::XMMatrixTranspose(DX::XMMatrixTranslation(v2F.x, v2F.y, v2F.z));
 }
 
@@ -58,7 +57,7 @@ void Cube::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
 	PBRPixelShader* pixelShader)
 {
 	if (m_pVertexBuffer == nullptr)
-		initResurce(pDevice, pContext);
+		initResource(pDevice, pContext);
 	
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
@@ -73,7 +72,7 @@ void Cube::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
 	pContext->Draw((UINT)m_vIndices.size(), 0u);
 }
 
-void Cube::initResurce(
+void Cube::initResource(
 	Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext>const& pContext)
 {
@@ -93,20 +92,6 @@ void Cube::initResurce(
 	sd.pSysMem = vBuffer.data();
 
 	THROW_IF_FAILED(DrawError, pDevice->CreateBuffer(&bd, &sd, &m_pVertexBuffer));
-	
-/*
-	D3D11_BUFFER_DESC ibd = { 0 };
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.Usage = D3D11_USAGE_DEFAULT;
-	ibd.CPUAccessFlags = 0u;
-	ibd.MiscFlags = 0u;
-	ibd.ByteWidth = (UINT)(m_vIndices.size() * sizeof(unsigned short));
-	ibd.StructureByteStride = sizeof(unsigned short);
-	D3D11_SUBRESOURCE_DATA isd = {};
-	isd.pSysMem = m_vIndices.data();
-
-	THROW_IF_FAILED(DrawError, pDevice->CreateBuffer(&ibd, &isd, &m_pVIndexBuffer));
-*/
 }
 
 void Cube::updateModelBuffer(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice, Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)

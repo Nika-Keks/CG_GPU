@@ -16,9 +16,6 @@ cbuffer M_CBuf : register(b1)
 	matrix model_transform;
 };
 
-
-
-
 VSOut main( float3 pos : Position, float3 norm : Normal )
 {
 	VSOut vso;

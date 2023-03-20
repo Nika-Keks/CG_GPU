@@ -12,7 +12,7 @@ void Scene::update(
 	Microsoft::WRL::ComPtr < ID3D11DeviceContext> const& pContext)
 {
 	if (m_pVertexShader == nullptr || m_pInputLayout == nullptr)
-		initResurses(pDevice, pContext);
+		initResourses(pDevice, pContext);
 	else
 	{
 		pContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0u);
@@ -25,12 +25,12 @@ void Scene::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
 	PBRPixelShader* pixelShader)
 {
 	if (m_pVertexShader == nullptr || m_pInputLayout == nullptr)
-		initResurses(pDevice, pContext);
+		initResourses(pDevice, pContext);
 	for (auto& obj : m_objects)
 		obj->render(pDevice, pContext,pixelShader);
 }
 
-void Scene::initResurses(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice, Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)
+void Scene::initResourses(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice, Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)
 {
 	// create vertex shader
 	Microsoft::WRL::ComPtr<ID3DBlob> pBlob;
