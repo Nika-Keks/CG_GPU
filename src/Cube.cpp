@@ -67,8 +67,8 @@ void Cube::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
 	pContext->IASetVertexBuffers(0u, 1u, m_pVertexBuffer.GetAddressOf(), &stride, &offset);
 #if USE_PBR_SHADER
 	pixelShader->CreateConstantBuffer(1, &m_pbrParams);
-	pixelShader->SetConstantBuffers();
 #endif
+	pixelShader->SetConstantBuffers();
 	pContext->Draw((UINT)m_vIndices.size(), 0u);
 }
 

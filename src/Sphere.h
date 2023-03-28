@@ -11,8 +11,8 @@ class Sphere :
     public PhysicallyDrawable
 {
 private:
-	static constexpr size_t s_vSamplingSize = 100;
-	static constexpr size_t s_hSamplingSize = 100;
+	static constexpr size_t s_vSamplingSize = 30;
+	static constexpr size_t s_hSamplingSize = 30;
 	
 public:
 	Sphere(DX::XMVECTOR const& position, float radius);

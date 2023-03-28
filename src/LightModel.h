@@ -68,7 +68,7 @@ private:
 	static constexpr wchar_t const* const m_psCopyPath = L"CopyPixelShader.cso";
 	static constexpr wchar_t const* const m_psBrightnessPath = L"BrightnessShader.cso";
 	static constexpr wchar_t const* const m_psHdrPath = L"HDRShader.cso";
-	static constexpr wchar_t const* const m_psNormalDistributionPath = L"NormalDistributionPixelShader.cso";
+	static constexpr wchar_t const* const m_psNormalDistributionPath = L"PBRPixelShader.cso";
 	//static constexpr wchar_t const* const m_vsCopyPath = L"CopyVertexShader.cso";
 
 	// tonemap vars

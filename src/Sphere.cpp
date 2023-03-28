@@ -14,7 +14,7 @@ Sphere::Sphere(DX::XMVECTOR const& position, float radius)
 			float x = sin(theta) * sin(phi);
 			float y = cos(theta);
 			float z = sin(theta) * cos(phi);
-			m_vertices[v * s_hSamplingSize + h] = { {x * radius, y * radius, z * radius}, {x, y, z} };
+			m_vertices[v * s_hSamplingSize + h] = { {x * radius, y * radius, z * radius}, {x,y,z} };
 		}
 	}
 
@@ -24,12 +24,12 @@ Sphere::Sphere(DX::XMVECTOR const& position, float radius)
 		{
 			const auto idx = (v * (s_hSamplingSize - 1) + h) * 6;
 			m_vIndices[idx] = v * s_hSamplingSize + h;
-			m_vIndices[idx + 1] = (v + 1) * s_hSamplingSize + (h + 1);
-			m_vIndices[idx + 2] = (v + 1) * s_hSamplingSize + h;
+			m_vIndices[idx + 2] = (v + 1) * s_hSamplingSize + (h + 1);
+			m_vIndices[idx + 1] = (v + 1) * s_hSamplingSize + h;
 
 			m_vIndices[idx + 3] = v * s_hSamplingSize + h;
-			m_vIndices[idx + 4] = v * s_hSamplingSize + (h + 1);
-			m_vIndices[idx + 5] = (v + 1) * s_hSamplingSize + (h + 1);
+			m_vIndices[idx + 5] = v * s_hSamplingSize + (h + 1);
+			m_vIndices[idx + 4] = (v + 1) * s_hSamplingSize + (h + 1);
 		}
 	}
 	DX::XMFLOAT3 v2F;
@@ -53,9 +53,8 @@ void Sphere::render(
 	pContext->IASetVertexBuffers(0u, 1u, m_pVertexBuffer.GetAddressOf(), &stride, &offset);
 #if USE_PBR_SHADER
 	pixelShader->CreateConstantBuffer(1, &m_pbrParams);
-	pixelShader->SetConstantBuffers();
 #endif
-
+	pixelShader->SetConstantBuffers();
 	pContext->Draw((UINT)m_vIndices.size(), 0u);
 }
 

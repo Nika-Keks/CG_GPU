@@ -30,10 +30,10 @@ Graphics::Graphics(HWND hWnd) :
 	scd.SampleDesc.Count = 1;
 	scd.SampleDesc.Quality = 0;
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	scd.BufferCount = 1;
+	scd.BufferCount = 2;
 	scd.OutputWindow = hWnd;
 	scd.Windowed = TRUE;
-	scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+	scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	scd.Flags = 0;
 
 	UINT creationFlags = 0;
@@ -161,8 +161,25 @@ void Graphics::DrawScene(Scene& scene, Camera const& camera, LightModel& lightMo
 
 	// Set primitive topology to triangle list (groups of 3 vertices)
 	m_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	
-	
+	__declspec(align(16))
+	struct CameraPos
+	{
+		DX::XMFLOAT3 xcameraPos;
+	};
+	CameraPos cb = { camera.getPos() };
+	lightModel.getShader().CreateConstantBuffer(2, &cb);
+
+	__declspec(align(16))
+		struct PBR
+	{
+		int normalEnabled = 0;
+		int geometryEnabled = 0;
+		int fresnelEnabled = 0;
+	};
+	PBR cb2 = { 1, 1, 1 };
+	lightModel.getShader().CreateConstantBuffer(3, &cb2);
+
+
 	scene.render(m_pDevice, m_pContext, &lightModel.getShader());
 	lightModel.applyTonemapEffect(m_pDevice, m_pContext, m_pAnnotation, m_sceneRenderTarget, m_postprocessedRenderTarget);
 

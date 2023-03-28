@@ -6,7 +6,7 @@ struct PSInput
     float3 color : Color;
     float4 pos : SV_Position;
     float4 norm : Normal;
-    float4 wPos : Position1;
+    float3 wPos : WORLD_POSITION;
 };
 
 struct PointLight
@@ -29,7 +29,40 @@ cbuffer MaterialBuffer : register(b1)
 	float metalness;
 };
 
+cbuffer CameraPosBuffer : register(b2)
+{
+	float3 cameraPos;
+};
+
+cbuffer PBRBuffer: register(b3)
+{
+	int normalEnabled;
+	int geometryEnabled;
+	int fresnelEnabled;
+};
+
 float sqr(float x)
 {
 	return x * x;
+}
+
+float3 toCamera(float3 worldPos)
+{
+	return normalize(cameraPos - worldPos);
+}
+
+float3 toLight(int idx, float3 worldPos)
+{
+	float3 lPos = lights[idx].pos;
+	return normalize(lPos - worldPos);
+}
+float positiveDot(float3 a, float3 b)
+{
+	return max(dot(a, b), 0);
+}
+
+float SchlickGGX(float3 n, float3 v, float k)
+{
+	float nv = positiveDot(n, v);
+	return nv / (nv * (1 - k) + k);
 }
