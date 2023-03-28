@@ -46,8 +46,14 @@ float4 main(PSInput input) : SV_TARGET
 		float3 wo = toCamera(input.wPos);
 		float3 l = toLight(i, input.wPos);
 		float3 n = normalize(input.norm);
-		result = result + (1 - F) * albedo / PI * (1 - metalness) +
-			D * F * G / (0.001f + 4 * (positiveDot(l, n) * positiveDot(wo, n)));
+		if (viewMode == pbrMode)
+			result = result + (1 - F) * albedo / PI * (1 - metalness) + D * F * G / (0.001f + 4 * (positiveDot(l, n) * positiveDot(wo, n)));
+		else if (viewMode == normalMode)
+			result = result + D;
+		else if (viewMode == geometryMode)
+			result = result + G;
+		else if (viewMode == fresnelMode)
+			result = result + F;
 	}
 	return float4(result, 1);
 }

@@ -172,11 +172,9 @@ void Graphics::DrawScene(Scene& scene, Camera const& camera, LightModel& lightMo
 	__declspec(align(16))
 		struct PBR
 	{
-		int normalEnabled = 0;
-		int geometryEnabled = 0;
-		int fresnelEnabled = 0;
+		int viewMode = 0;
 	};
-	PBR cb2 = { 1, 1, 1 };
+	PBR cb2 = { 0 };
 	lightModel.getShader().CreateConstantBuffer(3, &cb2);
 
 

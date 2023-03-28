@@ -1,5 +1,10 @@
 static const uint maxPLights = 3;
 static const float PI = 3.14159265359f;
+static const int pbrMode = 0;
+static const int normalMode = 1;
+static const int geometryMode = 2;
+static const int fresnelMode = 3;
+
 
 struct PSInput
 {
@@ -36,9 +41,7 @@ cbuffer CameraPosBuffer : register(b2)
 
 cbuffer PBRBuffer: register(b3)
 {
-	int normalEnabled;
-	int geometryEnabled;
-	int fresnelEnabled;
+	int viewMode;
 };
 
 float sqr(float x)
