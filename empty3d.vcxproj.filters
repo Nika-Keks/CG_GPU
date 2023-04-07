@@ -23,6 +23,9 @@
     <Filter Include="src\light">
       <UniqueIdentifier>{62ac9d45-2abd-49b6-9c75-07f2f2a5cdf6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\thirdParty">
+      <UniqueIdentifier>{25549630-6a11-416b-b551-5d99fc2e3812}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\App.cpp">
@@ -75,6 +78,21 @@
     </ClCompile>
     <ClCompile Include="src\Sphere.cpp">
       <Filter>src\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui.cpp">
+      <Filter>src\thirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_demo.cpp">
+      <Filter>src\thirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_draw.cpp">
+      <Filter>src\thirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_tables.cpp">
+      <Filter>src\thirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_widgets.cpp">
+      <Filter>src\thirdParty</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -135,6 +153,12 @@
     </ClInclude>
     <ClInclude Include="src\PixelShader.h">
       <Filter>src\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imgui.h">
+      <Filter>src\thirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imgui_internal.h">
+      <Filter>src\thirdParty</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

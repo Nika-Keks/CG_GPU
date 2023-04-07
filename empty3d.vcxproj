@@ -40,6 +40,11 @@
     <ClCompile Include="src\ScreenQuad.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\Sphere.cpp" />
+    <ClCompile Include="src\ThirdParty\ImGui\imgui.cpp" />
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="src\Timer.cpp" />
     <ClCompile Include="src\Window.cpp" />
     <ClCompile Include="src\WindowsMessageMap.cpp" />
@@ -62,6 +67,8 @@
     <ClInclude Include="src\ScreenQuad.h" />
     <ClInclude Include="src\Scene.h" />
     <ClInclude Include="src\Sphere.h" />
+    <ClInclude Include="src\ThirdParty\ImGui\imgui.h" />
+    <ClInclude Include="src\ThirdParty\ImGui\imgui_internal.h" />
     <ClInclude Include="src\Timer.h" />
     <ClInclude Include="src\WinDef.h" />
     <ClInclude Include="src\Window.h" />
@@ -192,12 +199,15 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\Daria\source\repos\CG_GPU\src\ThirdParty;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Users\Daria\source\repos\CG_GPU\src\ThirdParty;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Remply3d|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Users\Daria\source\repos\CG_GPU\src\ThirdParty;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
