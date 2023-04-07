@@ -26,6 +26,9 @@
     <Filter Include="src\thirdParty">
       <UniqueIdentifier>{25549630-6a11-416b-b551-5d99fc2e3812}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\include">
+      <UniqueIdentifier>{c28806cc-f798-4744-acd8-353a6d4642e1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\App.cpp">
@@ -94,6 +97,15 @@
     <ClCompile Include="src\ThirdParty\ImGui\imgui_widgets.cpp">
       <Filter>src\thirdParty</Filter>
     </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_impl_dx11.cpp">
+      <Filter>src\thirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_impl_win32.cpp">
+      <Filter>src\thirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PBRWidget.cpp">
+      <Filter>src\wnd</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\App.h">
@@ -159,6 +171,30 @@
     </ClInclude>
     <ClInclude Include="src\ThirdParty\ImGui\imgui_internal.h">
       <Filter>src\thirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imconfig.h">
+      <Filter>src\thirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imgui_impl_dx11.h">
+      <Filter>src\thirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imgui_impl_win32.h">
+      <Filter>src\thirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imstb_rectpack.h">
+      <Filter>src\thirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imstb_textedit.h">
+      <Filter>src\thirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imstb_truetype.h">
+      <Filter>src\thirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PBR.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PBRWidget.h">
+      <Filter>src\wnd</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

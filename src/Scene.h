@@ -9,6 +9,7 @@ class Scene : public Drawable
 public:
 	template <typename DrawT, typename... argsT>
 	void addDrawable(argsT... params);
+	unsigned phisicallyDrawableSize() const;
 	void setPBRParams(UINT idx, PBRParams params);
 	//void addLight();
 	void clear();

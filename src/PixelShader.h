@@ -6,6 +6,7 @@
 #include <memory>
 #include <algorithm>
 #include <DirectXMath.h>
+#include "PBR.h"
 
 namespace DX = DirectX;
 class PixelShader
@@ -57,14 +58,6 @@ protected:
 	std::map<UINT, Microsoft::WRL::ComPtr<ID3D11Buffer>> m_constantBuffers;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& m_pContext;
 	Microsoft::WRL::ComPtr<ID3D11Device> m_pDevice;
-};
-
-__declspec(align(16))
-struct PBRParams
-{
-	DX::XMFLOAT3 albedo;
-	float roughness;
-	float metalness;
 };
 
 class PBRPixelShader : public PixelShader
