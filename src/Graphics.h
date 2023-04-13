@@ -24,6 +24,7 @@ public:
 	void ClearBuffer( float red,float green,float blue ) noexcept;
 	void DrawTest(Camera const& viewCamera, float angle, float x, float y);
 	void DrawScene(Scene& scene, Camera const& camera, LightModel& lightModel);
+	void setPBRMode(PBRMode mode);
 
 private:
 
@@ -45,4 +46,6 @@ private:
 		int widht;
 		int height;
 	}bufferSize;
+
+	PBRMode m_mode;
 };

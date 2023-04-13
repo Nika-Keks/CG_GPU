@@ -54,6 +54,7 @@ public:
 	Graphics& Gfx();
 	void RenderGui();
 	PBRParams getPBRParams() const;
+	PBRMode getPBRMode() const;
 private:
 	static LRESULT CALLBACK WndProcWINAPI( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noexcept;
 	LRESULT WndProc( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noexcept;

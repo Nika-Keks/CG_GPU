@@ -10,8 +10,9 @@
 
 namespace DX = DirectX;
 
-Graphics::Graphics(HWND hWnd) :
-	bufferSize({ 0, 0 })
+Graphics::Graphics(HWND hWnd)
+: bufferSize({ 0, 0 })
+, m_mode(PBRMode::Full)
 {
 	RECT rect;
 	if (GetClientRect(hWnd, &rect))
@@ -176,15 +177,20 @@ void Graphics::DrawScene(Scene& scene, Camera const& camera, LightModel& lightMo
 	__declspec(align(16))
 		struct PBR
 	{
-		int viewMode = 0;
+		PBRMode viewMode = PBRMode::Full;
 	};
-	PBR cb2 = { 0 };
+	PBR cb2 = { m_mode };
 	ShaderLoader::get().getPBRShader(m_pDevice, m_pContext).CreateConstantBuffer(3, &cb2);
 	scene.render(m_pDevice, m_pContext);
 
 	lightModel.applyTonemapEffect(m_pDevice, m_pContext, m_pAnnotation, m_sceneRenderTarget, m_postprocessedRenderTarget);
 
 	endEvent();
+}
+
+void Graphics::setPBRMode(PBRMode mode)
+{
+	m_mode = mode;
 }
 
 void Graphics::setCamera(Camera const& camera)

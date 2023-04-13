@@ -14,3 +14,11 @@ struct PBRParams
 		, albedo(albedo_)
 	{};
 };
+
+enum class PBRMode : int
+{
+	Full               = 0,
+	NormalDistribution = 1,
+	Geometry           = 2,
+	Fresnel            = 3,
+};

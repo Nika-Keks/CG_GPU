@@ -16,7 +16,7 @@ App::App()
 		DX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f))
 {
 	AddSpheresGrid();
-	m_scene.setEnvSphere(20.f, s_envSphereTexturePath);
+	m_scene.setEnvSphere(80.f, s_envSphereTexturePath);
 	m_lightModel.addPointLight(DX::XMVectorSet(1.f, 0.f, -10.f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 50);
 	m_lightModel.addPointLight(DX::XMVectorSet(0.f, 0.f, -2.5f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 50);
 	m_lightModel.addPointLight(DX::XMVectorSet(-1.f, 0.f, -2.5f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 50);
@@ -66,6 +66,7 @@ void App::DoFrame()
 	{
 		m_scene.setPBRParams(i, m_wnd.getPBRParams());
 	}
+	m_wnd.Gfx().setPBRMode(m_wnd.getPBRMode());
 	m_wnd.Gfx().ClearBuffer( 1.f,1.f,1.f );
 	m_wnd.Gfx().DrawScene(m_scene, m_camera, m_lightModel);
 	m_wnd.mouse.Flush();
