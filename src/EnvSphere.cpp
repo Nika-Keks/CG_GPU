@@ -1,5 +1,4 @@
 #include "EnvSphere.h"
-#include "Defines.h"
 #include "ShaderLoader.h"
 
 #include <WICTextureLoader/WICTextureLoader.h>

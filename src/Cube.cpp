@@ -1,6 +1,5 @@
 #include <DirectXMath.h>
 #include "Cube.h"
-#include "Defines.h"
 
 namespace DX = DirectX;
 

@@ -2,7 +2,6 @@
 #include <cmath>
 #include "LightModel.h"
 #include "BaseException.h"
-#include "Defines.h"
 #include "ShaderLoader.h"
 
 

@@ -1,5 +1,4 @@
 #include "Sphere.h"
-#include "Defines.h"
 #include <algorithm>
 
 namespace DX = DirectX;
