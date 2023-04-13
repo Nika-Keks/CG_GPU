@@ -1,24 +1,19 @@
 #pragma once
-#include <vector>
 #include <array>
-#include <DirectXMath.h>
-#include "PhysicallyDrawable.h"
-#include "ShaderLoader.h"
+#include "Drawable.h"
 
-class Sphere :
-    public PhysicallyDrawable
+class EnvSphere :
+	public Drawable
 {
 private:
 	static constexpr size_t s_vSamplingSize = 30;
 	static constexpr size_t s_hSamplingSize = 30;
-	
+
 public:
-	Sphere(DirectX::XMVECTOR const& position, float radius, ShaderLoader::ShaderType type);
+	EnvSphere(DirectX::XMVECTOR const& position, float radius, wchar_t const* texturePath);
 	void render(
 		Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext) override;
-	const PBRParams getPBRParams() override;
-	void setPBRParams(PBRParams params) override;
 private:
 	struct Vertex
 	{
@@ -36,9 +31,14 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_pVertexBuffer;
 
-    std::array<size_t, (s_vSamplingSize - 1) * (s_hSamplingSize - 1) * 6> m_vIndices;
-	std::array<Vertex, s_vSamplingSize * s_hSamplingSize> m_vertices;
+	std::array<size_t, (s_vSamplingSize - 1)* (s_hSamplingSize - 1) * 6> m_vIndices;
+	std::array<Vertex, s_vSamplingSize* s_hSamplingSize> m_vertices;
 	DirectX::XMMATRIX m_transform;
-	PBRParams m_pbrParams;
-	ShaderLoader::ShaderType m_type;
+
+	//environment texture
+	Microsoft::WRL::ComPtr<ID3D11Resource> m_Texture;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_ShaderResourceView;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_pSamplerState;
+	wchar_t const* m_pTexturePath;
+
 };

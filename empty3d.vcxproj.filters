@@ -29,6 +29,12 @@
     <Filter Include="src\include">
       <UniqueIdentifier>{c28806cc-f798-4744-acd8-353a6d4642e1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\thirdParty\ImGui">
+      <UniqueIdentifier>{fec2c30a-007f-427d-8d58-22f54b536f77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\thirdParty\WICTextureLoader">
+      <UniqueIdentifier>{8143078a-1d53-47f5-a9b8-2ecdd63c784f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\App.cpp">
@@ -82,29 +88,47 @@
     <ClCompile Include="src\Sphere.cpp">
       <Filter>src\scene</Filter>
     </ClCompile>
-    <ClCompile Include="src\ThirdParty\ImGui\imgui.cpp">
-      <Filter>src\thirdParty</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ThirdParty\ImGui\imgui_demo.cpp">
-      <Filter>src\thirdParty</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ThirdParty\ImGui\imgui_draw.cpp">
-      <Filter>src\thirdParty</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ThirdParty\ImGui\imgui_tables.cpp">
-      <Filter>src\thirdParty</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ThirdParty\ImGui\imgui_widgets.cpp">
-      <Filter>src\thirdParty</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ThirdParty\ImGui\imgui_impl_dx11.cpp">
-      <Filter>src\thirdParty</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ThirdParty\ImGui\imgui_impl_win32.cpp">
-      <Filter>src\thirdParty</Filter>
-    </ClCompile>
     <ClCompile Include="src\PBRWidget.cpp">
       <Filter>src\wnd</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ShaderLoader.cpp">
+      <Filter>src\gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PixelShader.cpp">
+      <Filter>src\gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PBRPixelShader.cpp">
+      <Filter>src\gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_widgets.cpp">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_tables.cpp">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_impl_win32.cpp">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_impl_dx11.cpp">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_draw.cpp">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui_demo.cpp">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\ImGui\imgui.cpp">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\WICTextureLoader\WICTextureLoader.cpp">
+      <Filter>src\thirdParty\WICTextureLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EnvSphere.cpp">
+      <Filter>src\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThirdParty\WICTextureLoader\DDSTextureLoader11.cpp">
+      <Filter>src\thirdParty\WICTextureLoader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -166,35 +190,50 @@
     <ClInclude Include="src\PixelShader.h">
       <Filter>src\gfx</Filter>
     </ClInclude>
-    <ClInclude Include="src\ThirdParty\ImGui\imgui.h">
-      <Filter>src\thirdParty</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ThirdParty\ImGui\imgui_internal.h">
-      <Filter>src\thirdParty</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ThirdParty\ImGui\imconfig.h">
-      <Filter>src\thirdParty</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ThirdParty\ImGui\imgui_impl_dx11.h">
-      <Filter>src\thirdParty</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ThirdParty\ImGui\imgui_impl_win32.h">
-      <Filter>src\thirdParty</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ThirdParty\ImGui\imstb_rectpack.h">
-      <Filter>src\thirdParty</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ThirdParty\ImGui\imstb_textedit.h">
-      <Filter>src\thirdParty</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ThirdParty\ImGui\imstb_truetype.h">
-      <Filter>src\thirdParty</Filter>
-    </ClInclude>
     <ClInclude Include="src\PBR.h">
       <Filter>src\include</Filter>
     </ClInclude>
     <ClInclude Include="src\PBRWidget.h">
       <Filter>src\wnd</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ShaderLoader.h">
+      <Filter>src\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PBRPixelShader.h">
+      <Filter>src\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imstb_truetype.h">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imstb_textedit.h">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imstb_rectpack.h">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imgui_internal.h">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imgui_impl_win32.h">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imgui_impl_dx11.h">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imgui.h">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\ImGui\imconfig.h">
+      <Filter>src\thirdParty\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\WICTextureLoader\WICTextureLoader.h">
+      <Filter>src\thirdParty\WICTextureLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EnvSphere.h">
+      <Filter>src\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\WICTextureLoader\DDSTextureLoader11.h">
+      <Filter>src\thirdParty\WICTextureLoader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -224,6 +263,9 @@
       <Filter>src\shaders</Filter>
     </FxCompile>
     <FxCompile Include="src\PBRPixelShader.hlsl">
+      <Filter>src\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\EnvSphereVertexShader.hlsl">
       <Filter>src\shaders</Filter>
     </FxCompile>
   </ItemGroup>

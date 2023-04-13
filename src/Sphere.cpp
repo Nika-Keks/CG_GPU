@@ -2,8 +2,11 @@
 #include "Defines.h"
 #include <algorithm>
 
-Sphere::Sphere(DX::XMVECTOR const& position, float radius)
+namespace DX = DirectX;
+
+Sphere::Sphere(DX::XMVECTOR const& position, float radius, ShaderLoader::ShaderType type)
 	: m_pVertexBuffer(nullptr)
+	, m_type(type)
 {
 	for (size_t v = 0; v < s_vSamplingSize; v++)
 	{
@@ -11,9 +14,9 @@ Sphere::Sphere(DX::XMVECTOR const& position, float radius)
 		for (size_t h = 0; h < s_hSamplingSize; h++)
 		{
 			float phi = h / (s_hSamplingSize - 1.0f) * 2 * DX::XM_PI;
-			float x = sin(theta) * sin(phi);
-			float y = cos(theta);
-			float z = sin(theta) * cos(phi);
+			float x = static_cast<float>(sin(theta) * sin(phi));
+			float y = static_cast<float>(cos(theta));
+			float z = static_cast<float>(sin(theta) * cos(phi));
 			m_vertices[v * s_hSamplingSize + h] = { {x * radius, y * radius, z * radius}, {x,y,z} };
 		}
 	}
@@ -39,11 +42,13 @@ Sphere::Sphere(DX::XMVECTOR const& position, float radius)
 
 void Sphere::render(
 	Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext,
-	PBRPixelShader* pixelShader)
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)
 {
 	if (m_pVertexBuffer == nullptr)
 		initResource(pDevice, pContext);
+
+	auto& shader = ShaderLoader::get().getShader(m_type, pDevice, pContext);
+	shader.Set();
 
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
@@ -51,13 +56,11 @@ void Sphere::render(
 	updateModelBuffer(pDevice, pContext);
 
 	pContext->IASetVertexBuffers(0u, 1u, m_pVertexBuffer.GetAddressOf(), &stride, &offset);
-#if USE_PBR_SHADER
-	pixelShader->CreateConstantBuffer(1, &m_pbrParams);
-#endif
-	pixelShader->SetConstantBuffers();
+	if(m_type == ShaderLoader::PBRShader)
+		shader.CreateConstantBuffer(1, &m_pbrParams);
+	shader.SetConstantBuffers();
 	pContext->Draw((UINT)m_vIndices.size(), 0u);
 }
-
 void Sphere::initResource(
 	Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)

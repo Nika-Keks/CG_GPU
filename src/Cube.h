@@ -2,17 +2,17 @@
 #include <vector>
 #include <DirectXMath.h>
 #include "PhysicallyDrawable.h"
+#include "ShaderLoader.h"
 
 namespace DX = DirectX;
 
 class Cube : public PhysicallyDrawable
 {
 public:
-	Cube(DX::XMVECTOR const& position, float sideSize);
+	Cube(DX::XMVECTOR const& position, float sideSize, ShaderLoader::ShaderType type);
 	void render(
 		Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
-		Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext,
-		PBRPixelShader* pixelShader) override;
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext) override;
 	const PBRParams getPBRParams() override;
 	void setPBRParams(PBRParams params) override;
 
@@ -49,4 +49,5 @@ private:
 	std::vector<unsigned short> m_nIndeces;
 	DirectX::XMMATRIX m_transform;
 	PBRParams m_pbrParams;
+	ShaderLoader::ShaderType m_type;
 };
