@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 #include "PhysicallyDrawable.h"
+#include "Camera.h"
 
 
 class Scene : public Drawable
@@ -11,8 +12,10 @@ public:
 	void addDrawable(argsT... params);
 	template <typename DrawT, typename... argsT>
 	void addPhysicallyDrawable(argsT... params);
-	void setEnvSphere(float radius, wchar_t const* texturePath);
+	void setEnvSphere(float radius, wchar_t const* texturePath, DirectX::XMVECTOR pos, Camera const& camera);
 	unsigned phisicallyDrawableSize() const;
+	void startEvent(LPCWSTR eventName);
+	void endEvent();
 	void setPBRParams(UINT idx, PBRParams params);
 	//void addLight();
 	void clear();
@@ -36,6 +39,7 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_pVertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_pInputLayout;
+	Microsoft::WRL::ComPtr< ID3DUserDefinedAnnotation> m_pAnnotation;
 	static constexpr wchar_t const * const m_vsPath = L"VertexShader.cso";
 	static constexpr wchar_t const* const m_vsEnvSpherePath = L"EnvSphereVertexShader.cso";
 };

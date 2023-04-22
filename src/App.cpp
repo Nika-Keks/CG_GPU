@@ -11,15 +11,15 @@ App::App()
 	:
 	m_wnd(800, 600, "cg gpu", std::bind(&App::DoFrame, this)),
 	m_camera(
-		DX::XMVectorSet(0.f, 0.f, -10.f, 1.f),
+		DX::XMVectorSet(0.f, 0.f, 0.f, 1.f),
 		DX::XMVectorSet(0.f, 0.f, 1.f, 0.f),
 		DX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f))
 {
 	AddSpheresGrid();
-	m_scene.setEnvSphere(80.f, s_envSphereTexturePath);
+	m_scene.setEnvSphere(1000.f, s_envSphereTexturePath, DX::XMVectorSet(0.f, 0.f, -10.f, 1.f), m_camera);
 	m_lightModel.addPointLight(DX::XMVectorSet(1.f, 0.f, -10.f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 50);
-	m_lightModel.addPointLight(DX::XMVectorSet(0.f, 0.f, -2.5f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 50);
-	m_lightModel.addPointLight(DX::XMVectorSet(-1.f, 0.f, -2.5f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 50);
+	m_lightModel.addPointLight(DX::XMVectorSet(0.f, 0.f, -10.f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 50);
+	m_lightModel.addPointLight(DX::XMVectorSet(-1.f, 0.f, -10.f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 50);
 }
 
 int App::Go()

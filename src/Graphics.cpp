@@ -80,11 +80,37 @@ Graphics::Graphics(HWND hWnd)
 		reinterpret_cast<void**>(m_pAnnotation.GetAddressOf()))
 	);
 
+	// create DSV
+	D3D11_TEXTURE2D_DESC dtDesc = {};
+	dtDesc.Usage = D3D11_USAGE_DEFAULT;
+	dtDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	dtDesc.Width = bufferSize.widht;
+	dtDesc.Height = bufferSize.height;
+	dtDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	dtDesc.ArraySize = 1;
+	dtDesc.MipLevels = 1;
+	dtDesc.MiscFlags = 0;
+	dtDesc.CPUAccessFlags = 0;
+	dtDesc.SampleDesc.Count = 1;
+	dtDesc.SampleDesc.Quality = 0;
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> pDepthTexture;
+	THROW_IF_FAILED(GtxError, m_pDevice->CreateTexture2D(&dtDesc, nullptr, pDepthTexture.GetAddressOf()));
+
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Texture2D.MipSlice = 0;
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	dsvDesc.Flags = 0;
+
+	m_pDevice->CreateDepthStencilView(pDepthTexture.Get(), &dsvDesc, m_pDepthTextureDSV.GetAddressOf());
+
+	// create RTV
 	m_sceneRenderTarget = std::make_shared<RenderTargetTexture>(RenderTargetTexture(bufferSize.height, bufferSize.widht));
-	m_sceneRenderTarget->initResource(m_pDevice, m_pContext);
+	m_sceneRenderTarget->initResource(m_pDevice, m_pContext, m_pDepthTextureDSV.Get(), nullptr);
 	
 	m_postprocessedRenderTarget = std::make_shared<RenderTargetTexture>(RenderTargetTexture(bufferSize.height, bufferSize.widht));
-	m_postprocessedRenderTarget->initResource(m_pDevice, m_pContext, pBackBuffer);
+	m_postprocessedRenderTarget->initResource(m_pDevice, m_pContext, m_pDepthTextureDSV.Get(), pBackBuffer);
 
 	ImGui_ImplDX11_Init(m_pDevice.Get(), m_pContext.Get());
 }
@@ -166,6 +192,7 @@ void Graphics::DrawScene(Scene& scene, Camera const& camera, LightModel& lightMo
 
 	// Set primitive topology to triangle list (groups of 3 vertices)
 	m_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	__declspec(align(16))
 	struct CameraPos
 	{
@@ -199,19 +226,15 @@ void Graphics::setCamera(Camera const& camera)
 	{
 		DirectX::XMMATRIX transform;
 	};
+	FLOAT s_near = 1.f, s_far = 100000.f, s_fov = DX::XM_PIDIV2;
+	FLOAT width = s_near / tanf(s_fov / 2.0f);
+	FLOAT height = ((FLOAT)bufferSize.height / bufferSize.widht) * width;
 	const ConstantBuffer cb =
 	{
 		{
 			DX::XMMatrixTranspose(
-				DX::XMMatrixScaling(
-					std::min(1.f, (float)bufferSize.height / (float)bufferSize.widht),
-					std::min(1.f, (float)bufferSize.widht / (float)bufferSize.height),
-					1.f) *
 				camera.getView() *
-				DX::XMMatrixPerspectiveLH(
-					DX::XM_PIDIV4,
-					1.f,
-					1.f,100.0f)
+				DX::XMMatrixPerspectiveLH(width, height, s_near, s_far)
 			)
 		}
 	};
@@ -279,7 +302,7 @@ void Graphics::chSwapChain(int height, int width)
 	m_sceneRenderTarget->initResource(m_pDevice, m_pContext);
 
 	m_postprocessedRenderTarget = std::make_shared<RenderTargetTexture>(RenderTargetTexture(bufferSize.height, bufferSize.widht));
-	m_postprocessedRenderTarget->initResource(m_pDevice, m_pContext, pBackBuffer);
+	m_postprocessedRenderTarget->initResource(m_pDevice, m_pContext, nullptr, pBackBuffer);
 }
 
 void Graphics::EndFrame()
@@ -308,6 +331,7 @@ void Graphics::ClearBuffer( float red,float green,float blue ) noexcept
 	const float color[] = { red,green,blue,1.0f };
 	m_postprocessedRenderTarget->clear(red, green, blue, m_pDevice, m_pContext);
 	m_sceneRenderTarget->clear(red, green, blue, m_pDevice, m_pContext);
+	m_pContext->ClearDepthStencilView(m_pDepthTextureDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 Graphics::GtxError::GtxError(int line, const char* file)

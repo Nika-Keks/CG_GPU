@@ -37,6 +37,7 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain> m_pSwap;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_pContext;
 	Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation> m_pAnnotation;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_pDepthTextureDSV;
 
 	std::shared_ptr<RenderTargetTexture> m_sceneRenderTarget;
 	std::shared_ptr<RenderTargetTexture> m_postprocessedRenderTarget;

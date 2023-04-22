@@ -56,7 +56,7 @@ float3 toCamera(float3 worldPos)
 
 float3 toLight(int idx, float3 worldPos)
 {
-	float3 lPos = lights[idx].pos;
+	float3 lPos = lights[idx].pos.xyz;
 	return normalize(lPos - worldPos);
 }
 float positiveDot(float3 a, float3 b)
