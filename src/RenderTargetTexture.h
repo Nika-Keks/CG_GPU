@@ -11,7 +11,7 @@ public:
 	void initResource(
 		Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext>const& pContext, 
-		ID3D11DepthStencilView* dsView = nullptr, 
+		ID3D11DepthStencilView * dsView = nullptr, 
 		Microsoft::WRL::ComPtr<ID3D11Resource> pBackBuffer = nullptr);
 	void set(
 		Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,

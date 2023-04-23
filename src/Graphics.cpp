@@ -81,29 +81,7 @@ Graphics::Graphics(HWND hWnd)
 	);
 
 	// create DSV
-	D3D11_TEXTURE2D_DESC dtDesc = {};
-	dtDesc.Usage = D3D11_USAGE_DEFAULT;
-	dtDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	dtDesc.Width = bufferSize.widht;
-	dtDesc.Height = bufferSize.height;
-	dtDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	dtDesc.ArraySize = 1;
-	dtDesc.MipLevels = 1;
-	dtDesc.MiscFlags = 0;
-	dtDesc.CPUAccessFlags = 0;
-	dtDesc.SampleDesc.Count = 1;
-	dtDesc.SampleDesc.Quality = 0;
-
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> pDepthTexture;
-	THROW_IF_FAILED(GtxError, m_pDevice->CreateTexture2D(&dtDesc, nullptr, pDepthTexture.GetAddressOf()));
-
-	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	dsvDesc.Texture2D.MipSlice = 0;
-	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	dsvDesc.Flags = 0;
-
-	m_pDevice->CreateDepthStencilView(pDepthTexture.Get(), &dsvDesc, m_pDepthTextureDSV.GetAddressOf());
+	createDSBuffer();
 
 	// create RTV
 	m_sceneRenderTarget = std::make_shared<RenderTargetTexture>(RenderTargetTexture(bufferSize.height, bufferSize.widht));
@@ -220,6 +198,33 @@ void Graphics::setPBRMode(PBRMode mode)
 	m_mode = mode;
 }
 
+void Graphics::createDSBuffer()
+{
+	D3D11_TEXTURE2D_DESC dtDesc = {};
+	dtDesc.Usage = D3D11_USAGE_DEFAULT;
+	dtDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	dtDesc.Width = bufferSize.widht;
+	dtDesc.Height = bufferSize.height;
+	dtDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	dtDesc.ArraySize = 1;
+	dtDesc.MipLevels = 1;
+	dtDesc.MiscFlags = 0;
+	dtDesc.CPUAccessFlags = 0;
+	dtDesc.SampleDesc.Count = 1;
+	dtDesc.SampleDesc.Quality = 0;
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> pDepthTexture;
+	THROW_IF_FAILED(GtxError, m_pDevice->CreateTexture2D(&dtDesc, nullptr, pDepthTexture.GetAddressOf()));
+
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Texture2D.MipSlice = 0;
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	dsvDesc.Flags = 0;
+
+	THROW_IF_FAILED(GtxError, m_pDevice->CreateDepthStencilView(pDepthTexture.Get(), &dsvDesc, m_pDepthTextureDSV.GetAddressOf()));
+}
+
 void Graphics::setCamera(Camera const& camera)
 {
 	struct ConstantBuffer
@@ -285,6 +290,7 @@ void Graphics::chSwapChain(int height, int width)
 
 	m_sceneRenderTarget.reset();
 	m_postprocessedRenderTarget.reset();
+	m_pDepthTextureDSV.Reset();
 
 	m_pContext->ClearState();
 
@@ -298,11 +304,13 @@ void Graphics::chSwapChain(int height, int width)
 		m_pSwap->GetBuffer(0, __uuidof(ID3D11Resource), reinterpret_cast<void**>(pBackBuffer.GetAddressOf()))
 	);
 
+	createDSBuffer();
+
 	m_sceneRenderTarget = std::make_shared<RenderTargetTexture>(RenderTargetTexture(bufferSize.height, bufferSize.widht));
-	m_sceneRenderTarget->initResource(m_pDevice, m_pContext);
+	m_sceneRenderTarget->initResource(m_pDevice, m_pContext, m_pDepthTextureDSV.Get(), nullptr);
 
 	m_postprocessedRenderTarget = std::make_shared<RenderTargetTexture>(RenderTargetTexture(bufferSize.height, bufferSize.widht));
-	m_postprocessedRenderTarget->initResource(m_pDevice, m_pContext, nullptr, pBackBuffer);
+	m_postprocessedRenderTarget->initResource(m_pDevice, m_pContext, m_pDepthTextureDSV.Get(), pBackBuffer);
 }
 
 void Graphics::EndFrame()

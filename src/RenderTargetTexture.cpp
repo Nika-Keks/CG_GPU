@@ -7,7 +7,7 @@ RenderTargetTexture::RenderTargetTexture(int height, int width) : m_height(heigh
 void RenderTargetTexture::initResource(
 	Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext>const& pContext, 
-	ID3D11DepthStencilView* dsView, 
+	ID3D11DepthStencilView * dsView, 
 	Microsoft::WRL::ComPtr<ID3D11Resource> pBackBuffer)
 {
 	D3D11_TEXTURE2D_DESC td;

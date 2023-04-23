@@ -25,6 +25,7 @@ public:
 	void DrawTest(Camera const& viewCamera, float angle, float x, float y);
 	void DrawScene(Scene& scene, Camera const& camera, LightModel& lightModel);
 	void setPBRMode(PBRMode mode);
+	void createDSBuffer();
 
 private:
 
