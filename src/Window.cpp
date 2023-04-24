@@ -1,4 +1,7 @@
 #include "Window.h"
+#include <ImGui/imgui.h>
+#include <ImGui/imgui_impl_dx11.h>
+#include <ImGui/imgui_impl_win32.h>
 #include <sstream>
 
 
@@ -64,12 +67,18 @@ Window::Window( int width,int height,const char* name, std::function<void(void)>
 	);
 	// newly created windows start off as hidden
 	ShowWindow( hWnd,SW_SHOWDEFAULT );
+	// init ImGui
+	InitImGui();
 	// create graphics object
 	pGfx = std::make_unique<Graphics>( hWnd );
 }
 
 Window::~Window()
 {
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
 	DestroyWindow( hWnd );
 }
 
@@ -124,6 +133,26 @@ Graphics& Window::Gfx()
 	return *pGfx;
 }
 
+void Window::RenderGui()
+{
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	pbrWidget.AddToRender();
+
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+}
+PBRParams Window::getPBRParams() const
+{
+	return pbrWidget.GetParams();
+}
+PBRMode Window::getPBRMode() const
+{
+	return pbrWidget.GetMode();
+}
+
 LRESULT CALLBACK Window::WndProcWINAPI( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noexcept
 {
 	// retrieve ptr to window instance
@@ -139,8 +168,12 @@ LRESULT CALLBACK Window::WndProcWINAPI( HWND hWnd,UINT msg,WPARAM wParam,LPARAM 
 	return pWnd->WndProc( hWnd,msg,wParam,lParam );
 }
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 LRESULT Window::WndProc( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noexcept
 {
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+		return true;
 	switch( msg )
 	{
 	// we don't want the DefProc to handle this message because
@@ -262,6 +295,14 @@ LRESULT Window::WndProc( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noexce
 	return DefWindowProcA( hWnd,msg,wParam,lParam );
 }
 
+void Window::InitImGui()
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+
+	ImGui_ImplWin32_Init(hWnd);
+}
 
 // Window Exception Stuff
 Window::Exception::Exception( int line,const char* file,HRESULT hr ) noexcept

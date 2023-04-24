@@ -1,22 +1,31 @@
 #pragma once
 #include <vector>
+#include <array>
 #include <DirectXMath.h>
 #include "PhysicallyDrawable.h"
 #include "ShaderLoader.h"
 
-namespace DX = DirectX;
-
-class Cube : public PhysicallyDrawable
+class Sphere :
+    public PhysicallyDrawable
 {
+private:
+	static constexpr size_t s_vSamplingSize = 30;
+	static constexpr size_t s_hSamplingSize = 30;
+	
 public:
-	Cube(DX::XMVECTOR const& position, float sideSize, ShaderLoader::ShaderType type);
+	Sphere(DirectX::XMVECTOR const& position, float radius, ShaderLoader::ShaderType type);
 	void render(
 		Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext) override;
 	const PBRParams getPBRParams() override;
 	void setPBRParams(PBRParams params) override;
-
 private:
+	struct Vertex
+	{
+		DirectX::XMFLOAT3 pos;
+		DirectX::XMFLOAT3 norm;
+	};
+
 	void initResource(
 		Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext);
@@ -26,27 +35,9 @@ private:
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext);
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_pVertexBuffer;
-	//Microsoft::WRL::ComPtr<ID3D11Buffer> m_pVIndexBuffer;
-	//Microsoft::WRL::ComPtr<ID3D11Buffer> m_pNoramlBuffer;
-	//Microsoft::WRL::ComPtr<ID3D11Buffer> m_pNIndexBuffer;
 
-
-	struct Vertex
-	{
-		DX::XMFLOAT3 pos;
-		/*struct
-		{
-			unsigned char r;
-			unsigned char g;
-			unsigned char b;
-			unsigned char a;
-		} color;*/
-		DX::XMFLOAT3 norm;
-	};
-	std::vector<DX::XMFLOAT3> m_vertices;
-	std::vector<unsigned short> m_vIndices;
-	std::vector<DX::XMFLOAT3> m_normals;
-	std::vector<unsigned short> m_nIndeces;
+    std::array<size_t, (s_vSamplingSize - 1) * (s_hSamplingSize - 1) * 6> m_vIndices;
+	std::array<Vertex, s_vSamplingSize * s_hSamplingSize> m_vertices;
 	DirectX::XMMATRIX m_transform;
 	PBRParams m_pbrParams;
 	ShaderLoader::ShaderType m_type;

@@ -24,6 +24,8 @@ public:
 	void ClearBuffer( float red,float green,float blue ) noexcept;
 	void DrawTest(Camera const& viewCamera, float angle, float x, float y);
 	void DrawScene(Scene& scene, Camera const& camera, LightModel& lightModel);
+	void setPBRMode(PBRMode mode);
+	void createDSBuffer();
 
 private:
 
@@ -36,6 +38,7 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain> m_pSwap;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_pContext;
 	Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation> m_pAnnotation;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_pDepthTextureDSV;
 
 	std::shared_ptr<RenderTargetTexture> m_sceneRenderTarget;
 	std::shared_ptr<RenderTargetTexture> m_postprocessedRenderTarget;
@@ -45,4 +48,6 @@ private:
 		int widht;
 		int height;
 	}bufferSize;
+
+	PBRMode m_mode;
 };

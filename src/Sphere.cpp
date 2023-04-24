@@ -1,87 +1,73 @@
-#include <DirectXMath.h>
-#include "Cube.h"
+#include "Sphere.h"
+#include <algorithm>
 
 namespace DX = DirectX;
 
-Cube::Cube(DX::XMVECTOR const& position, float sideSize, ShaderLoader::ShaderType type)
+Sphere::Sphere(DX::XMVECTOR const& position, float radius, ShaderLoader::ShaderType type)
 	: m_pVertexBuffer(nullptr)
 	, m_type(type)
-
 {
-	float hufSize = sideSize / 2;
-	m_vertices =
+	for (size_t v = 0; v < s_vSamplingSize; v++)
 	{
-		{-hufSize,-hufSize,-hufSize}, //, 255,0,0,0 },
-		{-hufSize,-hufSize, hufSize}, //, 0,0,255,0 },
-		{-hufSize, hufSize,-hufSize}, //, 0,0,255,0 },
-		{-hufSize, hufSize, hufSize}, //, 255,0,255,0 },
-		{ hufSize,-hufSize,-hufSize}, //, 0,255,0,0 },
-		{ hufSize,-hufSize, hufSize}, //, 255,255,0,0 },
-		{ hufSize, hufSize,-hufSize}, //, 0,255,0,0 },
-		{ hufSize, hufSize, hufSize}, //, 0,255,255,0 },
-	};
+		float theta = v / (s_vSamplingSize - 1.0f) * DX::XM_PI;
+		for (size_t h = 0; h < s_hSamplingSize; h++)
+		{
+			float phi = h / (s_hSamplingSize - 1.0f) * 2 * DX::XM_PI;
+			float x = static_cast<float>(sin(theta) * sin(phi));
+			float y = static_cast<float>(cos(theta));
+			float z = static_cast<float>(sin(theta) * cos(phi));
+			m_vertices[v * s_hSamplingSize + h] = { {x * radius, y * radius, z * radius}, {x,y,z} };
+		}
+	}
 
-	m_vIndices =
+	for (size_t v = 0; v < s_vSamplingSize - 1; v++)
 	{
-		0,6,4, 0,2,6,
-		0,3,2, 0,1,3,
-		2,7,6, 2,3,7,
-		4,6,7, 4,7,5,
-		0,4,5, 0,5,1,
-		1,5,7, 1,7,3,
-	};
+		for (size_t h = 0; h < s_hSamplingSize - 1; h++)
+		{
+			const auto idx = (v * (s_hSamplingSize - 1) + h) * 6;
+			m_vIndices[idx] = v * s_hSamplingSize + h;
+			m_vIndices[idx + 2] = (v + 1) * s_hSamplingSize + (h + 1);
+			m_vIndices[idx + 1] = (v + 1) * s_hSamplingSize + h;
 
-	m_normals = {
-		{0.0	,0.0	,1.0	},
-		{0.0	,0.0	,- 1.0	},
-		{0.0	,1.0	,0.0	},
-		{0.0	,- 1.0	,0.0	},
-		{1.0	,0.0	,0.0	},
-		{-1.0	,0.0	,0.0	},
-	};
-
-	m_nIndeces = {
-		1,1,1, 1,1,1,
-		5,5,5, 5,5,5,
-		2,2,2, 2,2,2,
-		4,4,4, 4,4,4,
-		3,3,3, 3,3,3,
-		0,0,0, 0,0,0,
-	};
+			m_vIndices[idx + 3] = v * s_hSamplingSize + h;
+			m_vIndices[idx + 5] = v * s_hSamplingSize + (h + 1);
+			m_vIndices[idx + 4] = (v + 1) * s_hSamplingSize + (h + 1);
+		}
+	}
 	DX::XMFLOAT3 v2F;
 	DX::XMStoreFloat3(&v2F, position);
 	m_transform = DX::XMMatrixTranspose(DX::XMMatrixTranslation(v2F.x, v2F.y, v2F.z));
 }
 
-void Cube::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext>const& pContext)
+void Sphere::render(
+	Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)
 {
 	if (m_pVertexBuffer == nullptr)
 		initResource(pDevice, pContext);
 
 	auto& shader = ShaderLoader::get().getShader(m_type, pDevice, pContext);
 	shader.Set();
-	
+
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
-	
+
 	updateModelBuffer(pDevice, pContext);
 
 	pContext->IASetVertexBuffers(0u, 1u, m_pVertexBuffer.GetAddressOf(), &stride, &offset);
-	if (m_type == ShaderLoader::PBRShader)
+	if(m_type == ShaderLoader::PBRShader)
 		shader.CreateConstantBuffer(1, &m_pbrParams);
 	shader.SetConstantBuffers();
 	pContext->Draw((UINT)m_vIndices.size(), 0u);
 }
-
-void Cube::initResource(
-	Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext>const& pContext)
+void Sphere::initResource(
+	Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)
 {
 	std::vector<Vertex> vBuffer;
 	vBuffer.reserve(m_vIndices.size());
 	for (UINT i = 0; i < m_vIndices.size(); i++)
-		vBuffer.push_back({ m_vertices[m_vIndices[i]], m_normals[m_nIndeces[i]] });
+		vBuffer.push_back(m_vertices[m_vIndices[i]]);
 
 	D3D11_BUFFER_DESC bd = { 0 };
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -96,14 +82,16 @@ void Cube::initResource(
 	THROW_IF_FAILED(DrawError, pDevice->CreateBuffer(&bd, &sd, &m_pVertexBuffer));
 }
 
-void Cube::updateModelBuffer(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice, Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)
+void Sphere::updateModelBuffer(
+	Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)
 {
 	struct ConstantBuffer
 	{
 		DirectX::XMMATRIX transform;
 	};
 
-	const ConstantBuffer cb
+	const ConstantBuffer cb =
 	{
 		m_transform
 	};
@@ -124,12 +112,12 @@ void Cube::updateModelBuffer(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice
 	pContext->VSSetConstantBuffers(1u, 1u, pConstantBuffer.GetAddressOf());
 }
 
-const PBRParams Cube::getPBRParams()
+const PBRParams Sphere::getPBRParams()
 {
 	return m_pbrParams;
 }
 
-void Cube::setPBRParams(PBRParams params)
+void Sphere::setPBRParams(PBRParams params)
 {
 	m_pbrParams = params;
 }

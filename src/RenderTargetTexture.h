@@ -10,7 +10,8 @@ public:
 	RenderTargetTexture(int height, int width);
 	void initResource(
 		Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
-		Microsoft::WRL::ComPtr<ID3D11DeviceContext>const& pContext,
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext>const& pContext, 
+		ID3D11DepthStencilView * dsView = nullptr, 
 		Microsoft::WRL::ComPtr<ID3D11Resource> pBackBuffer = nullptr);
 	void set(
 		Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
@@ -31,6 +32,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_pTexture2D;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_pRenderTargetView;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_pShaderResourceView;
+	ID3D11DepthStencilView* m_dsView;
 	D3D11_VIEWPORT m_viewport;
 };
 
