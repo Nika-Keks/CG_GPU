@@ -33,7 +33,9 @@
     <ClCompile Include="src\Cube.cpp" />
     <ClCompile Include="src\Drawable.cpp" />
     <ClCompile Include="src\EnvSphere.cpp" />
+    <ClCompile Include="src\GfxObject.cpp" />
     <ClCompile Include="src\Graphics.cpp" />
+    <ClCompile Include="src\HDRITextureLoader.cpp" />
     <ClCompile Include="src\Keyboard.cpp" />
     <ClCompile Include="src\LightModel.cpp" />
     <ClCompile Include="src\Mouse.cpp" />
@@ -66,7 +68,9 @@
     <ClInclude Include="src\Cube.h" />
     <ClInclude Include="src\Drawable.h" />
     <ClInclude Include="src\EnvSphere.h" />
+    <ClInclude Include="src\GfxObject.h" />
     <ClInclude Include="src\Graphics.h" />
+    <ClInclude Include="src\HDRITextureLoader.h" />
     <ClInclude Include="src\Keyboard.h" />
     <ClInclude Include="src\LightModel.h" />
     <ClInclude Include="src\Mouse.h" />
@@ -88,6 +92,7 @@
     <ClInclude Include="src\ThirdParty\ImGui\imstb_rectpack.h" />
     <ClInclude Include="src\ThirdParty\ImGui\imstb_textedit.h" />
     <ClInclude Include="src\ThirdParty\ImGui\imstb_truetype.h" />
+    <ClInclude Include="src\ThirdParty\stb\stb_image.h" />
     <ClInclude Include="src\ThirdParty\WICTextureLoader\DDSTextureLoader11.h" />
     <ClInclude Include="src\ThirdParty\WICTextureLoader\WICTextureLoader.h" />
     <ClInclude Include="src\Timer.h" />
@@ -98,6 +103,7 @@
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="README.md" />
+    <None Include="src\HDRI.hlsli" />
     <None Include="src\PBRPixelShader.cginc" />
   </ItemGroup>
   <ItemGroup>
@@ -128,6 +134,22 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Remply3d|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="src\HDRtoEnvPixelShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Remply3d|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Remply3d|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="src\HDRtoEnvVertexShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Remply3d|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Remply3d|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="src\PBRPixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>

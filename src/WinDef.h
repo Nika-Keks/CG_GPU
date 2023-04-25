@@ -43,3 +43,6 @@
 
 #include <Windows.h>
 #include <wrl.h>
+
+template <typename T>
+using com_ptr = Microsoft::WRL::ComPtr<T>;
