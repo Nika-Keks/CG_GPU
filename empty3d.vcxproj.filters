@@ -35,6 +35,12 @@
     <Filter Include="src\thirdParty\WICTextureLoader">
       <UniqueIdentifier>{8143078a-1d53-47f5-a9b8-2ecdd63c784f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\shaders\HDRI">
+      <UniqueIdentifier>{718528b2-dc1f-465b-8895-3d47f0d349a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\thirdParty\stb">
+      <UniqueIdentifier>{0002f163-e671-49e5-b978-e59fd5c6b56f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\App.cpp">
@@ -130,6 +136,12 @@
     <ClCompile Include="src\ThirdParty\WICTextureLoader\DDSTextureLoader11.cpp">
       <Filter>src\thirdParty\WICTextureLoader</Filter>
     </ClCompile>
+    <ClCompile Include="src\GfxObject.cpp">
+      <Filter>src\gfx</Filter>
+    </ClCompile>
+    <ClCompile Include="src\HDRITextureLoader.cpp">
+      <Filter>src\gfx</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\App.h">
@@ -183,7 +195,6 @@
     <ClInclude Include="src\Sphere.h">
       <Filter>src\scene</Filter>
     </ClInclude>
-    <ClInclude Include="src\Defines.h" />
     <ClInclude Include="src\PhysicallyDrawable.h">
       <Filter>src\scene</Filter>
     </ClInclude>
@@ -235,12 +246,24 @@
     <ClInclude Include="src\ThirdParty\WICTextureLoader\DDSTextureLoader11.h">
       <Filter>src\thirdParty\WICTextureLoader</Filter>
     </ClInclude>
+    <ClInclude Include="src\GfxObject.h">
+      <Filter>src\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HDRITextureLoader.h">
+      <Filter>src\gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThirdParty\stb\stb_image.h">
+      <Filter>src\thirdParty\stb</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
     <None Include=".gitignore" />
     <None Include="src\PBRPixelShader.cginc">
       <Filter>src\shaders</Filter>
+    </None>
+    <None Include="src\HDRI.hlsli">
+      <Filter>src\shaders\HDRI</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -267,6 +290,12 @@
     </FxCompile>
     <FxCompile Include="src\EnvSphereVertexShader.hlsl">
       <Filter>src\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\HDRtoEnvPixelShader.hlsl">
+      <Filter>src\shaders\HDRI</Filter>
+    </FxCompile>
+    <FxCompile Include="src\HDRtoEnvVertexShader.hlsl">
+      <Filter>src\shaders\HDRI</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>
