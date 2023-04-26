@@ -5,12 +5,13 @@ TextureCube CubeMap : register(t0);
 float4 main(OutputVS vsout) : SV_TARGET
 {
     float3 normal = normalize(vsout.worldPos.xyz);
-    float3 tangent = normalize(normal.z < 10e-3 ? float3(normal.y, -normal.x, 0) : float3(0, -normal.z, normal.y));
+    float3 dir = abs(normal.z) < 0.999 ? float3(0.0, 0.0, 1.0) : float3(1.0, 0.0, 0.0);
+    float3 tangent = normalize(cross(dir, normal));
     float3 binormal = cross(normal, tangent);
 
     float4 irradiance = float4(0.0, 0.0, 0.0, 0.0);
-    const uint N = 250;
-    const uint K = 100;
+    const int N = 200;
+    const int K = 50;
     float PI = acos(-1);
 
     for (int i = 0; i < N; ++i)

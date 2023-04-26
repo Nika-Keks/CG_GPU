@@ -8,9 +8,13 @@
 void HDRITextureLoader::initPSO()
 {
 	com_ptr<ID3DBlob> pBlob;
-	// pixel shader
+	// pixel hdr shader
 	THROW_IF_FAILED(GtxObjError, D3DReadFileToBlob(L"./HDRtoEnvPixelShader.cso", pBlob.GetAddressOf()));
 	THROW_IF_FAILED(GtxObjError, m_pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &m_pHDRtoCubeMapPS));
+
+	// pixel irr shader
+	THROW_IF_FAILED(GtxObjError, D3DReadFileToBlob(L"./IRRPixelShader.cso", pBlob.GetAddressOf()));
+	THROW_IF_FAILED(GtxObjError, m_pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &m_pIrrCubeMapPS));
 
 	// vertex shader
 	THROW_IF_FAILED(GtxObjError, D3DReadFileToBlob(L"./HDRtoEnvVertexShader.cso", pBlob.GetAddressOf()));
@@ -40,10 +44,16 @@ void HDRITextureLoader::initPSO()
 	THROW_IF_FAILED(GtxObjError, m_pDevice->CreateBuffer(&cbd, nullptr, &m_pConstantBuffer));
 
 	// cleate render target texture
+	createTextureRTV(m_hdrTextureSize, m_pHDRTexture, m_pHDRTextureRTV);
+	createTextureRTV(m_irrTextureSize, m_pIrrTexture, m_pIrrTextureRTV);
+}
+
+void HDRITextureLoader::createTextureRTV(UINT size, com_ptr<ID3D11Texture2D>& pTexture, com_ptr<ID3D11RenderTargetView>& pTextureRTV)
+{
 	D3D11_TEXTURE2D_DESC hdrtd = {};
 	hdrtd.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	hdrtd.Width = m_hdrTextureSize;
-	hdrtd.Height = m_hdrTextureSize;
+	hdrtd.Width = size;
+	hdrtd.Height = size;
 	hdrtd.BindFlags = D3D11_BIND_RENDER_TARGET;
 	hdrtd.Usage = D3D11_USAGE_DEFAULT;
 	hdrtd.CPUAccessFlags = 0;
@@ -52,13 +62,13 @@ void HDRITextureLoader::initPSO()
 	hdrtd.ArraySize = 1;
 	hdrtd.SampleDesc.Count = 1;
 	hdrtd.SampleDesc.Quality = 0;
-	THROW_IF_FAILED(GtxObjError, m_pDevice->CreateTexture2D(&hdrtd, nullptr, m_pHDRTexture512.GetAddressOf()));
-	THROW_IF_FAILED(GtxObjError, m_pDevice->CreateRenderTargetView(m_pHDRTexture512.Get(), nullptr, m_pHDRTexture512RTV.GetAddressOf()));
+	THROW_IF_FAILED(GtxObjError, m_pDevice->CreateTexture2D(&hdrtd, nullptr, pTexture.GetAddressOf()));
+	THROW_IF_FAILED(GtxObjError, m_pDevice->CreateRenderTargetView(pTexture.Get(), nullptr, pTextureRTV.GetAddressOf()));
 }
 
 HDRITextureLoader::HDRITextureLoader(com_ptr<ID3D11Device> const& pDevice, com_ptr<ID3D11DeviceContext> const& pContext, com_ptr<ID3DUserDefinedAnnotation> const& pAnnotation)
 	: GfxObject(pDevice, pContext, pAnnotation),
-	m_hdrTextureSize(512),
+	m_hdrTextureSize(1024),
 	m_irrTextureSize(32)
 {
 	initPSO();
@@ -98,7 +108,8 @@ HDRITextureLoader::HDRITextureLoader(com_ptr<ID3D11Device> const& pDevice, com_p
 	m_pMatrix = DirectX::XMMatrixPerspectiveLH(2 * width, 2 * height, nearp, farp);
 }
 
-void HDRITextureLoader::loadEnvCubeMap(std::string const& hdrFile, com_ptr<ID3D11Texture2D>& pEnvCubeMap)
+
+void HDRITextureLoader::loadEnvCubeMap(std::string const& hdrFile, com_ptr<ID3D11Texture2D>& pEnvCubeMap, com_ptr<ID3D11Texture2D>& pIrrCubeMap)
 {
 	// read hdr file to texture & create srv
 	com_ptr<ID3D11Texture2D> pHDRTexture;
@@ -106,6 +117,9 @@ void HDRITextureLoader::loadEnvCubeMap(std::string const& hdrFile, com_ptr<ID3D1
 
 	// render cube map from hdr texture
 	renderEnvCubeMap(pHDRTexture, pEnvCubeMap);
+
+	//render irradiance map from env cube map
+	renderIrrCubeMap(pEnvCubeMap, pIrrCubeMap);
 }
 
 void HDRITextureLoader::renderEnvCubeMap(com_ptr<ID3D11Texture2D> const& pHDRTexture, com_ptr<ID3D11Texture2D>& pEnvCubeMap)
@@ -120,12 +134,10 @@ void HDRITextureLoader::renderEnvCubeMap(com_ptr<ID3D11Texture2D> const& pHDRTex
 	startEvent(L"HDRtoEnv");
 
 	m_pContext->ClearState();
-	m_pContext->OMSetRenderTargets(1, m_pHDRTexture512RTV.GetAddressOf(), nullptr);
+	m_pContext->OMSetRenderTargets(1, m_pHDRTextureRTV.GetAddressOf(), nullptr);
 	
 	// set view port & scissors rect
-	setViewPort(m_hdrTextureSize, m_hdrTextureSize);
-	
-
+	setViewPort(m_hdrTextureSize, m_hdrTextureSize); 
 
 	m_pContext->IASetInputLayout(nullptr);
 	m_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
@@ -139,14 +151,55 @@ void HDRITextureLoader::renderEnvCubeMap(com_ptr<ID3D11Texture2D> const& pHDRTex
 
 	for (UINT i = 0; i < 6; ++i)
 	{
-		m_pContext->ClearRenderTargetView(m_pHDRTexture512RTV.Get(), clearColor);
+		m_pContext->ClearRenderTargetView(m_pHDRTextureRTV.Get(), clearColor);
 		DX::XMStoreFloat4x4(&cb.mMatrix, DX::XMMatrixTranspose(m_mMatrises[i]));
 		DX::XMStoreFloat4x4(&cb.vpMatrix, DX::XMMatrixTranspose(m_vMatrisis[i] * m_pMatrix));
 		m_pContext->UpdateSubresource(m_pConstantBuffer.Get(), 0, nullptr, &cb, 0, 0);
 		m_pContext->VSSetConstantBuffers(0, 1, m_pConstantBuffer.GetAddressOf());
 		m_pContext->Draw(4, 0);
-		m_pContext->CopySubresourceRegion(pEnvCubeMap.Get(), i, 0, 0, 0, m_pHDRTexture512.Get(), 0, nullptr);
+		m_pContext->CopySubresourceRegion(pEnvCubeMap.Get(), i, 0, 0, 0, m_pHDRTexture.Get(), 0, nullptr);
 	}
+	endEvent();
+}
+
+void HDRITextureLoader::renderIrrCubeMap(com_ptr<ID3D11Texture2D> const& pEnvCubeMap, com_ptr<ID3D11Texture2D>& pIrrCubeMap)
+{
+	// create shder resurce view
+	com_ptr<ID3D11ShaderResourceView> pEnvCubeMapSRV;
+	m_pDevice->CreateShaderResourceView(pEnvCubeMap.Get(), nullptr, &pEnvCubeMapSRV);
+
+	// create cube map
+	createCubeMap(pIrrCubeMap, m_irrTextureSize);
+
+	startEvent(L"ENVtoIrradiance");
+
+	m_pContext->ClearState();
+	m_pContext->OMSetRenderTargets(1, m_pIrrTextureRTV.GetAddressOf(), nullptr);
+
+	// set view port & scissors rect
+	setViewPort(m_irrTextureSize, m_irrTextureSize);
+
+	m_pContext->IASetInputLayout(nullptr);
+	m_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	m_pContext->VSSetShader(m_pHDRtoCubeMapVS.Get(), nullptr, 0);
+	m_pContext->PSSetShader(m_pIrrCubeMapPS.Get(), nullptr, 0);
+	m_pContext->PSSetShaderResources(0, 1, pEnvCubeMapSRV.GetAddressOf());
+	m_pContext->PSSetSamplers(0, 1, m_pHDRtoCubeMapSampler.GetAddressOf());
+
+	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	ConstantBuffer cb = {};
+
+	for (UINT i = 0; i < 6; ++i)
+	{
+		m_pContext->ClearRenderTargetView(m_pIrrTextureRTV.Get(), clearColor);
+		DX::XMStoreFloat4x4(&cb.mMatrix, DX::XMMatrixTranspose(m_mMatrises[i]));
+		DX::XMStoreFloat4x4(&cb.vpMatrix, DX::XMMatrixTranspose(m_vMatrisis[i] * m_pMatrix));
+		m_pContext->UpdateSubresource(m_pConstantBuffer.Get(), 0, nullptr, &cb, 0, 0);
+		m_pContext->VSSetConstantBuffers(0, 1, m_pConstantBuffer.GetAddressOf());
+		m_pContext->Draw(4, 0);
+		m_pContext->CopySubresourceRegion(pIrrCubeMap.Get(), i, 0, 0, 0, m_pIrrTexture.Get(), 0, nullptr);
+	}
+
 	endEvent();
 }
 
@@ -169,7 +222,6 @@ void HDRITextureLoader::setViewPort(UINT width, UINT hight)
 	m_pContext->RSSetViewports(1, &viewport);
 	m_pContext->RSSetScissorRects(1, &rect);
 }
-
 
 void HDRITextureLoader::createCubeMap(com_ptr<ID3D11Texture2D>& pCubeMap, UINT cubeMapSize)
 {

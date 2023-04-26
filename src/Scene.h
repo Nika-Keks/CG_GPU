@@ -48,6 +48,8 @@ private:
 	std::shared_ptr<HDRITextureLoader> m_pHDRLoader;
 	com_ptr<ID3D11Texture2D> m_pEnvCubeMap;
 	com_ptr<ID3D11ShaderResourceView> m_pEnvCubeMapSRV;
+	com_ptr<ID3D11Texture2D> m_pIrrCubeMap;
+	com_ptr<ID3D11ShaderResourceView> m_pIrrCubeMapSRV;
 };
 
 template <typename DrawT, typename... argsT>

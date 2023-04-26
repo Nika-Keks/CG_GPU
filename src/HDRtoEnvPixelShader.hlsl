@@ -1,5 +1,7 @@
 #include "HDRI.hlsli"
 
+Texture2D HDRTexture : register(t0);
+
 float4 main(OutputVS vsout) : SV_TARGET
 {
     float PI = acos(-1);

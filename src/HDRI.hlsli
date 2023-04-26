@@ -19,8 +19,6 @@ static float4 positions[4] =
     { 1.0f, -1.0f, 1.0f, 1.0f }
 };
 
-Texture2D HDRTexture : register(t0);
-
 cbuffer ConstBuffer : register(b0)
 {
     float4x4 mMatrix;

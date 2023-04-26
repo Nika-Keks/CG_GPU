@@ -34,6 +34,7 @@ void Scene::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
 		m_environmentSphere->render(pDevice, pContext);
 		pContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0u);
 		pContext->IASetInputLayout(m_pInputLayout.Get());
+		pContext->PSSetShaderResources(0, 1, m_pIrrCubeMapSRV.GetAddressOf());
 		endEvent();
 	}
 
@@ -97,11 +98,12 @@ void Scene::initResourses(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice, M
 		m_pHDRLoader = std::make_shared<HDRITextureLoader>(pDevice, pContext, m_pAnnotation);
 	if (!m_pEnvCubeMap)
 	{
-		m_pHDRLoader->loadEnvCubeMap("./../../src/kloppenheim_03_puresky_4k.hdr", m_pEnvCubeMap);
-		pDevice->CreateShaderResourceView(m_pEnvCubeMap.Get(), nullptr, m_pEnvCubeMapSRV.GetAddressOf());
+		m_pHDRLoader->loadEnvCubeMap("./../../image/misty_farm_road_4k.hdr", m_pEnvCubeMap, m_pIrrCubeMap);
+		THROW_IF_FAILED(DrawError, pDevice->CreateShaderResourceView(m_pEnvCubeMap.Get(), nullptr, m_pEnvCubeMapSRV.GetAddressOf()));
+		THROW_IF_FAILED(DrawError, pDevice->CreateShaderResourceView(m_pIrrCubeMap.Get(), nullptr, m_pIrrCubeMapSRV.GetAddressOf()));
+		if (m_environmentSphere)
+			m_environmentSphere->resetEndCubeMapSRV(m_pEnvCubeMapSRV);
 	}
-	if (m_environmentSphere)
-		m_environmentSphere->resetEndCubeMapSRV(m_pEnvCubeMapSRV);
 	update(pDevice, pContext);
 }
 
