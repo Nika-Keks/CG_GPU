@@ -12,10 +12,12 @@ private:
 	Camera const* m_pCamera;
 
 public:
-	EnvSphere(DirectX::XMVECTOR const& position, float radius, wchar_t const* texturePath, Camera const& camera);
+	EnvSphere(DirectX::XMVECTOR const& position, float radius, Camera const& camera, com_ptr<ID3D11ShaderResourceView>const& pEnvCubeMapSRV);
 	void render(
 		Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext) override;
+	void resetEndCubeMapSRV(com_ptr<ID3D11ShaderResourceView>const& pEnvCubeMapSRV);
+
 private:
 	struct Vertex
 	{
@@ -41,6 +43,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Resource> m_Texture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_ShaderResourceView;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_pSamplerState;
-	wchar_t const* m_pTexturePath;
-
+	com_ptr<ID3D11PixelShader> m_pPixelShader;
+	com_ptr<ID3D11ShaderResourceView> m_pEnvCubeMapSRV;
 };

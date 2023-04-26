@@ -1,5 +1,7 @@
 #include "HDRITextureLoader.h"
 #include <d3dcompiler.h>
+
+#define STB_IMAGE_IMPLEMENTATION
 #include "./ThirdParty/stb/stb_image.h"
 
 
@@ -7,11 +9,11 @@ void HDRITextureLoader::initPSO()
 {
 	com_ptr<ID3DBlob> pBlob;
 	// pixel shader
-	THROW_IF_FAILED(GtxObjError, D3DReadFileToBlob(L"./", pBlob.GetAddressOf()));
+	THROW_IF_FAILED(GtxObjError, D3DReadFileToBlob(L"./HDRtoEnvPixelShader.cso", pBlob.GetAddressOf()));
 	THROW_IF_FAILED(GtxObjError, m_pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &m_pHDRtoCubeMapPS));
 
 	// vertex shader
-	THROW_IF_FAILED(GtxObjError, D3DReadFileToBlob(L"./", pBlob.GetAddressOf()));
+	THROW_IF_FAILED(GtxObjError, D3DReadFileToBlob(L"./HDRtoEnvVertexShader.cso", pBlob.GetAddressOf()));
 	THROW_IF_FAILED(GtxObjError, m_pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &m_pHDRtoCubeMapVS));
 
 	// sampler
@@ -27,18 +29,15 @@ void HDRITextureLoader::initPSO()
 	THROW_IF_FAILED(GtxObjError, m_pDevice->CreateSamplerState(&samplerDesc, &m_pHDRtoCubeMapSampler));
 
 	// constat buffer
-	ConstantBuffer cb;
-	memset(&cb, 0, sizeof(cb));
 	D3D11_BUFFER_DESC cbd = { 0 };
+	cbd.Usage = D3D11_USAGE_DEFAULT;
+	cbd.ByteWidth = sizeof(ConstantBuffer);
 	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbd.Usage = D3D11_USAGE_DYNAMIC;
-	cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	cbd.MiscFlags = 0u;
-	cbd.ByteWidth = sizeof(cb);
-	cbd.StructureByteStride = 0u;
-	D3D11_SUBRESOURCE_DATA csd = { 0 };
-	csd.pSysMem = &cb;
-	THROW_IF_FAILED(GtxObjError, m_pDevice->CreateBuffer(&cbd, &csd, &m_pConstantBuffer));
+	cbd.CPUAccessFlags = 0;
+	cbd.MiscFlags = 0;
+	cbd.StructureByteStride = 0;
+
+	THROW_IF_FAILED(GtxObjError, m_pDevice->CreateBuffer(&cbd, nullptr, &m_pConstantBuffer));
 
 	// cleate render target texture
 	D3D11_TEXTURE2D_DESC hdrtd = {};
@@ -62,6 +61,7 @@ HDRITextureLoader::HDRITextureLoader(com_ptr<ID3D11Device> const& pDevice, com_p
 	m_hdrTextureSize(512),
 	m_irrTextureSize(32)
 {
+	initPSO();
 	m_mMatrises[0] = DX::XMMatrixRotationY(DX::XM_PIDIV2);	// +X
 	m_mMatrises[1] = DX::XMMatrixRotationY(-DX::XM_PIDIV2);	// -X
 	m_mMatrises[2] = DX::XMMatrixRotationX(-DX::XM_PIDIV2);	// +Y
@@ -69,9 +69,27 @@ HDRITextureLoader::HDRITextureLoader(com_ptr<ID3D11Device> const& pDevice, com_p
 	m_mMatrises[4] = DX::XMMatrixIdentity();				// +Z
 	m_mMatrises[5] = DX::XMMatrixRotationY(DX::XM_PI);		// -Z
 
-	m_vMatrix = DirectX::XMMatrixLookToLH(
+	//m_vMatrix = DirectX::XMMatrixLookToLH(
+	//	{ 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 0.0f }
+	//);
+	m_vMatrisis[0] = DirectX::XMMatrixLookToLH(
+		{ 0.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 0.0f }
+	);	// +X
+	m_vMatrisis[1] = DirectX::XMMatrixLookToLH(
+		{ 0.0f, 0.0f, 0.0f, 1.0f }, { -1.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 0.0f }
+	);	// -X
+	m_vMatrisis[2] = DirectX::XMMatrixLookToLH(
+		{ 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f, 0.0f }
+	);	// +Y
+	m_vMatrisis[3] = DirectX::XMMatrixLookToLH(
+		{ 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, -1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f, 0.0f }
+	);	// -Y
+	m_vMatrisis[4] = DirectX::XMMatrixLookToLH(
 		{ 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 0.0f }
-	);
+	);	// +Z
+	m_vMatrisis[5] = DirectX::XMMatrixLookToLH(
+		{ 0.0f, 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 0.0f }
+	);	// -Z
 	const float nearp = 0.5f;
 	const float farp = 1.5f;
 	const float fov = DX::XM_PIDIV2;
@@ -80,7 +98,7 @@ HDRITextureLoader::HDRITextureLoader(com_ptr<ID3D11Device> const& pDevice, com_p
 	m_pMatrix = DirectX::XMMatrixPerspectiveLH(2 * width, 2 * height, nearp, farp);
 }
 
-void HDRITextureLoader::loadEnvCubeMap(std::string const& hdrFile, com_ptr<ID3D11Texture2D>& pEnvCubeMap, com_ptr<ID3D11ShaderResourceView>& pEnvCubeMapSRV)
+void HDRITextureLoader::loadEnvCubeMap(std::string const& hdrFile, com_ptr<ID3D11Texture2D>& pEnvCubeMap)
 {
 	// read hdr file to texture & create srv
 	com_ptr<ID3D11Texture2D> pHDRTexture;
@@ -103,9 +121,11 @@ void HDRITextureLoader::renderEnvCubeMap(com_ptr<ID3D11Texture2D> const& pHDRTex
 
 	m_pContext->ClearState();
 	m_pContext->OMSetRenderTargets(1, m_pHDRTexture512RTV.GetAddressOf(), nullptr);
-
+	
 	// set view port & scissors rect
 	setViewPort(m_hdrTextureSize, m_hdrTextureSize);
+	
+
 
 	m_pContext->IASetInputLayout(nullptr);
 	m_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
@@ -120,10 +140,10 @@ void HDRITextureLoader::renderEnvCubeMap(com_ptr<ID3D11Texture2D> const& pHDRTex
 	for (UINT i = 0; i < 6; ++i)
 	{
 		m_pContext->ClearRenderTargetView(m_pHDRTexture512RTV.Get(), clearColor);
-		cb.mMatrix = m_mMatrises[i];
-		cb.vpMatrix = (m_mMatrises[i] * m_vMatrix) * m_pMatrix;
+		DX::XMStoreFloat4x4(&cb.mMatrix, DX::XMMatrixTranspose(m_mMatrises[i]));
+		DX::XMStoreFloat4x4(&cb.vpMatrix, DX::XMMatrixTranspose(m_vMatrisis[i] * m_pMatrix));
 		m_pContext->UpdateSubresource(m_pConstantBuffer.Get(), 0, nullptr, &cb, 0, 0);
-		m_pContext->VSSetConstantBuffers(0, 1, &m_pConstantBuffer);
+		m_pContext->VSSetConstantBuffers(0, 1, m_pConstantBuffer.GetAddressOf());
 		m_pContext->Draw(4, 0);
 		m_pContext->CopySubresourceRegion(pEnvCubeMap.Get(), i, 0, 0, 0, m_pHDRTexture512.Get(), 0, nullptr);
 	}

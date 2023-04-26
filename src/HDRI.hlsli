@@ -5,6 +5,12 @@ struct OutputVS
     float4 worldPos : POSITION1;
 };
 
+
+struct InputVS
+{
+    uint vertexId   : SV_VERTEXID;
+};
+
 static float4 positions[4] =
 {
     { -1.0f, 1.0f, 1.0f, 1.0f },
@@ -13,7 +19,7 @@ static float4 positions[4] =
     { 1.0f, -1.0f, 1.0f, 1.0f }
 };
 
-TextureCube CubeMap : register(t0);
+Texture2D HDRTexture : register(t0);
 
 cbuffer ConstBuffer : register(b0)
 {

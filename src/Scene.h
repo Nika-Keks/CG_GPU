@@ -3,6 +3,8 @@
 #include <vector>
 #include "PhysicallyDrawable.h"
 #include "Camera.h"
+#include "HDRITextureLoader.h"
+#include "EnvSphere.h"
 
 
 class Scene : public Drawable
@@ -33,7 +35,7 @@ private:
 
 	std::vector<std::shared_ptr<Drawable>> m_objects;
 	std::vector<std::shared_ptr<PhysicallyDrawable>> m_physicallObjects;
-	std::shared_ptr<Drawable> m_environmentSphere;
+	std::shared_ptr<EnvSphere> m_environmentSphere;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_pEnvSphereVertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_pEnvSphereInputLayout;
 
@@ -42,6 +44,10 @@ private:
 	Microsoft::WRL::ComPtr< ID3DUserDefinedAnnotation> m_pAnnotation;
 	static constexpr wchar_t const * const m_vsPath = L"VertexShader.cso";
 	static constexpr wchar_t const* const m_vsEnvSpherePath = L"EnvSphereVertexShader.cso";
+
+	std::shared_ptr<HDRITextureLoader> m_pHDRLoader;
+	com_ptr<ID3D11Texture2D> m_pEnvCubeMap;
+	com_ptr<ID3D11ShaderResourceView> m_pEnvCubeMapSRV;
 };
 
 template <typename DrawT, typename... argsT>

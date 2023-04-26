@@ -161,12 +161,12 @@ void Graphics::DrawScene(Scene& scene, Camera const& camera, LightModel& lightMo
 {
 	startEvent(L"DrawScene");
 	ID3D11ShaderResourceView* nullSRV = nullptr;
+ 	
+	scene.update(m_pDevice, m_pContext);
 	m_pContext->PSSetShaderResources(0, 1, &nullSRV);
 	m_sceneRenderTarget->set(m_pDevice, m_pContext);
- 	
-	lightModel.update(m_pDevice, m_pContext);
-	scene.update(m_pDevice, m_pContext);
 	setCamera(camera);
+	lightModel.update(m_pDevice, m_pContext);
 
 	// Set primitive topology to triangle list (groups of 3 vertices)
 	m_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

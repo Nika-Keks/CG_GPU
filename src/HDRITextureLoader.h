@@ -11,8 +11,8 @@ class HDRITextureLoader : public GfxObject
 private:
 	struct ConstantBuffer
 	{
-		DirectX::XMMATRIX mMatrix;
-		DirectX::XMMATRIX vpMatrix;
+		DX::XMFLOAT4X4 mMatrix;
+		DX::XMFLOAT4X4 vpMatrix;
 	};
 
 	com_ptr<ID3D11PixelShader> m_pHDRtoCubeMapPS;
@@ -25,7 +25,7 @@ private:
 	com_ptr<ID3D11RenderTargetView> m_pHDRTexture512RTV;
 
 	DX::XMMATRIX m_pMatrix;
-	DX::XMMATRIX m_vMatrix;
+	DX::XMMATRIX m_vMatrisis[6];
 	DX::XMMATRIX m_mMatrises[6];
 
 	void initPSO();
@@ -39,7 +39,7 @@ public:
 					com_ptr<ID3D11DeviceContext> const& pContext,
 					com_ptr<ID3DUserDefinedAnnotation> const& pAnnotation);
 
-	void loadEnvCubeMap(std::string const& hdrFile, com_ptr<ID3D11Texture2D>& pEnvCubeMap, com_ptr<ID3D11ShaderResourceView>& pEnvCubeMapSRV);
+	void loadEnvCubeMap(std::string const& hdrFile, com_ptr<ID3D11Texture2D>& pEnvCubeMap);
 
 	~HDRITextureLoader() override;
 };

@@ -1,7 +1,5 @@
 #include "Scene.h"
 #include <d3dcompiler.h>
-#include "EnvSphere.h"
-#include "Camera.h"
 
 
 void Scene::clear()
@@ -55,7 +53,7 @@ void Scene::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
 
 void Scene::setEnvSphere(float radius, wchar_t const* texturePath, DirectX::XMVECTOR pos, Camera const& camera)
 {
-	m_environmentSphere = std::make_shared<EnvSphere>(pos, radius, texturePath, camera);
+	m_environmentSphere = std::make_shared<EnvSphere>(pos, radius, camera, m_pEnvCubeMapSRV);
 }
 
 void Scene::initResourses(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice, Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)
@@ -95,6 +93,15 @@ void Scene::initResourses(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice, M
 		));
 	}
 
+	if (!m_pHDRLoader)
+		m_pHDRLoader = std::make_shared<HDRITextureLoader>(pDevice, pContext, m_pAnnotation);
+	if (!m_pEnvCubeMap)
+	{
+		m_pHDRLoader->loadEnvCubeMap("./../../src/kloppenheim_03_puresky_4k.hdr", m_pEnvCubeMap);
+		pDevice->CreateShaderResourceView(m_pEnvCubeMap.Get(), nullptr, m_pEnvCubeMapSRV.GetAddressOf());
+	}
+	if (m_environmentSphere)
+		m_environmentSphere->resetEndCubeMapSRV(m_pEnvCubeMapSRV);
 	update(pDevice, pContext);
 }
 
