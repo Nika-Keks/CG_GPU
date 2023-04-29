@@ -297,11 +297,14 @@
     <FxCompile Include="src\HDRtoEnvVertexShader.hlsl">
       <Filter>src\shaders\HDRI</Filter>
     </FxCompile>
-    <FxCompile Include="EnvSpherePixelShader.hlsl">
-      <Filter>src\shaders</Filter>
-    </FxCompile>
     <FxCompile Include="src\IRRPixelShader.hlsl">
       <Filter>src\shaders\HDRI</Filter>
+    </FxCompile>
+    <FxCompile Include="src\PrefilteredPixelShader.hlsl">
+      <Filter>src\shaders\HDRI</Filter>
+    </FxCompile>
+    <FxCompile Include="src\EnvSpherePixelShader.hlsl">
+      <Filter>src\shaders</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

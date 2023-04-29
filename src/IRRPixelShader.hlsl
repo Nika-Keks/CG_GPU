@@ -1,6 +1,7 @@
 #include "HDRI.hlsli"
 
 TextureCube CubeMap : register(t0);
+SamplerState EnvSampler : register(s0);
 
 float4 main(OutputVS vsout) : SV_TARGET
 {
