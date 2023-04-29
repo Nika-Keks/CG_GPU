@@ -19,6 +19,10 @@ void HDRITextureLoader::initPSO()
 	// pixel prefiltered shader
 	THROW_IF_FAILED(GtxObjError, D3DReadFileToBlob(L"./PrefilteredPixelShader.cso", &pBlob));
 	THROW_IF_FAILED(GtxObjError, m_pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &m_pPrefCubeMapPS));
+	
+	// pixel prefiltered shader
+	THROW_IF_FAILED(GtxObjError, D3DReadFileToBlob(L"./PreintegratedBRDFPixelShader.cso", &pBlob));
+	THROW_IF_FAILED(GtxObjError, m_pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &m_pPtreintBRDFPS));
 
 	// vertex shader
 	THROW_IF_FAILED(GtxObjError, D3DReadFileToBlob(L"./HDRtoEnvVertexShader.cso", &pBlob));
@@ -52,15 +56,17 @@ void HDRITextureLoader::initPSO()
 
 
 	// cleate render target texture
-	createTextureRTV(m_hdrTextureSize, m_pHDRTexture, m_pHDRTextureRTV);
-	createTextureRTV(m_irrTextureSize, m_pIrrTexture, m_pIrrTextureRTV);
-	createTextureRTV(m_prefTextureSize, m_pPrefTexture, m_pPrefTextureRTV);
+	createTextureRTV(m_hdrTextureSize, m_pHDRTexture, m_pHDRTextureRTV, DXGI_FORMAT_R32G32B32A32_FLOAT);
+	createTextureRTV(m_irrTextureSize, m_pIrrTexture, m_pIrrTextureRTV, DXGI_FORMAT_R32G32B32A32_FLOAT);
+	createTextureRTV(m_prefTextureSize, m_pPrefTexture, m_pPrefTextureRTV, DXGI_FORMAT_R32G32B32A32_FLOAT);
+	createTextureRTV(m_preintegratedBRDFSize, m_pPreintBRDFTexture, m_pPreintBRDFTextureRTV, DXGI_FORMAT_R32G32_FLOAT);
+
 }
 
-void HDRITextureLoader::createTextureRTV(UINT size, com_ptr<ID3D11Texture2D>& pTexture, com_ptr<ID3D11RenderTargetView>& pTextureRTV)
+void HDRITextureLoader::createTextureRTV(UINT size, com_ptr<ID3D11Texture2D>& pTexture, com_ptr<ID3D11RenderTargetView>& pTextureRTV, DXGI_FORMAT format)
 {
 	D3D11_TEXTURE2D_DESC hdrtd = {};
-	hdrtd.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	hdrtd.Format = format;
 	hdrtd.Width = size;
 	hdrtd.Height = size;
 	hdrtd.BindFlags = D3D11_BIND_RENDER_TARGET;
@@ -75,12 +81,14 @@ void HDRITextureLoader::createTextureRTV(UINT size, com_ptr<ID3D11Texture2D>& pT
 	THROW_IF_FAILED(GtxObjError, m_pDevice->CreateRenderTargetView(pTexture.Get(), nullptr, pTextureRTV.GetAddressOf()));
 }
 
+
 HDRITextureLoader::HDRITextureLoader(com_ptr<ID3D11Device> const& pDevice, com_ptr<ID3D11DeviceContext> const& pContext, com_ptr<ID3DUserDefinedAnnotation> const& pAnnotation)
 	: GfxObject(pDevice, pContext, pAnnotation),
 	m_hdrTextureSize(1024),
 	m_irrTextureSize(32),
 	m_prefTextureSize(128),
-	m_mipLevels(4)
+	m_mipLevels(4),
+	m_preintegratedBRDFSize(128)
 {
 	initPSO();
 	m_mMatrises[0] = DX::XMMatrixRotationY(DX::XM_PIDIV2);	// +X
@@ -135,6 +143,10 @@ void HDRITextureLoader::loadEnvCubeMap(std::string const& hdrFile, com_ptr<ID3D1
 	// render prefiltered color
 	com_ptr<ID3D11Texture2D> pPrefCubeMap;
 	renderPreliteredCubeMap(pEnvCubeMap, pPrefCubeMap);
+
+	// rebder preintegrated BRDF
+	com_ptr<ID3D11Texture2D> pPreintBRDFTexture;
+	renderPreintBRDFTexture(pPreintBRDFTexture);
 }
 
 void HDRITextureLoader::renderEnvCubeMap(com_ptr<ID3D11Texture2D> const& pHDRTexture, com_ptr<ID3D11Texture2D>& pEnvCubeMap)
@@ -272,6 +284,51 @@ void HDRITextureLoader::renderPreliteredCubeMap(com_ptr<ID3D11Texture2D> const& 
 			mipLevelSize /= 2;
 		}
 	}
+	endEvent();
+}
+
+void HDRITextureLoader::renderPreintBRDFTexture(com_ptr<ID3D11Texture2D>& pPreintBRDFTexture)
+{
+	// create texture
+	D3D11_TEXTURE2D_DESC txd = {};
+	txd.Format = DXGI_FORMAT_R32G32_FLOAT;
+	txd.Width = m_prefTextureSize;
+	txd.Height = m_prefTextureSize;
+	txd.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	txd.Usage = D3D11_USAGE_DEFAULT;
+	txd.CPUAccessFlags = 0;
+	txd.MiscFlags = 0;
+	txd.MipLevels = 1;
+	txd.ArraySize = 1;
+	txd.SampleDesc.Count = 1;
+	txd.SampleDesc.Quality = 0;
+	THROW_IF_FAILED(GtxObjError, m_pDevice->CreateTexture2D(&txd, nullptr, &pPreintBRDFTexture));
+
+	// setup pipeline
+	startEvent(L"Ptreintegrated BRDF");
+
+	m_pContext->ClearState();
+	m_pContext->OMSetRenderTargets(1, m_pPreintBRDFTextureRTV.GetAddressOf(), nullptr);
+
+	// set view port & scissors rect
+	setViewPort(m_preintegratedBRDFSize, m_preintegratedBRDFSize);
+
+	m_pContext->IASetInputLayout(nullptr);
+	m_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	m_pContext->VSSetShader(m_pHDRtoCubeMapVS.Get(), nullptr, 0);
+	m_pContext->PSSetShader(m_pPtreintBRDFPS.Get(), nullptr, 0);
+
+	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	ConstantBufferVS vcb = {};
+	UINT const defaultIndex = 4;
+	DX::XMStoreFloat4x4(&vcb.mMatrix, DX::XMMatrixTranspose(m_mMatrises[defaultIndex]));
+	DX::XMStoreFloat4x4(&vcb.vpMatrix, DX::XMMatrixTranspose(m_vMatrisis[defaultIndex] * m_pMatrix));
+	m_pContext->UpdateSubresource(m_pConstantBufferVS.Get(), 0, nullptr, &vcb, 0, 0);
+	m_pContext->VSSetConstantBuffers(0, 1, m_pConstantBufferVS.GetAddressOf());
+	m_pContext->ClearRenderTargetView(m_pPreintBRDFTextureRTV.Get(), clearColor);
+	m_pContext->Draw(4, 0);
+	m_pContext->CopySubresourceRegion(pPreintBRDFTexture.Get(), 0, 0, 0, 0, m_pPreintBRDFTexture.Get(), 0, nullptr);
+
 	endEvent();
 }
 

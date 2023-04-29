@@ -265,6 +265,9 @@
     <None Include="src\HDRI.hlsli">
       <Filter>src\shaders\HDRI</Filter>
     </None>
+    <None Include="src\SpecularHeader.hlsli">
+      <Filter>src\shaders\HDRI</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\BrightnessShader.hlsl">
@@ -305,6 +308,9 @@
     </FxCompile>
     <FxCompile Include="src\EnvSpherePixelShader.hlsl">
       <Filter>src\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\PreintegratedBRDFPixelShader.hlsl">
+      <Filter>src\shaders\HDRI</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

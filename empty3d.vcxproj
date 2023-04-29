@@ -105,6 +105,7 @@
     <None Include="README.md" />
     <None Include="src\HDRI.hlsli" />
     <None Include="src\PBRPixelShader.cginc" />
+    <None Include="src\SpecularHeader.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\BrightnessShader.hlsl">
@@ -172,6 +173,14 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Remply3d|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="src\PrefilteredPixelShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Remply3d|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Remply3d|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="src\PreintegratedBRDFPixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Remply3d|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Remply3d|x64'">Pixel</ShaderType>

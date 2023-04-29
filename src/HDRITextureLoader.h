@@ -44,6 +44,13 @@ private:
 	com_ptr<ID3D11RenderTargetView> m_pPrefTextureRTV;
 	com_ptr<ID3D11PixelShader> m_pPrefCubeMapPS;
 
+	// preintegrated BRDF
+	UINT m_preintegratedBRDFSize;
+	com_ptr<ID3D11Texture2D> m_pPreintBRDFTexture;
+	com_ptr<ID3D11RenderTargetView> m_pPreintBRDFTextureRTV;
+	com_ptr<ID3D11PixelShader> m_pPtreintBRDFPS;
+
+
 	DX::XMMATRIX m_pMatrix;
 	DX::XMMATRIX m_vMatrisis[6];
 	DX::XMMATRIX m_mMatrises[6];
@@ -54,10 +61,11 @@ private:
 	void renderEnvCubeMap(com_ptr<ID3D11Texture2D> const& pHDRTexture, com_ptr<ID3D11Texture2D>& pEnvCubeMap);
 	void renderIrrCubeMap(com_ptr<ID3D11Texture2D> const& pEnvCubeMap, com_ptr<ID3D11Texture2D>& pIrrCubeMap);
 	void renderPreliteredCubeMap(com_ptr<ID3D11Texture2D> const& pEnvCubeMap, com_ptr<ID3D11Texture2D>& pPrefCubeMap);
+	void renderPreintBRDFTexture(com_ptr<ID3D11Texture2D>& pPreintBRDFTexture);
 	
 	void createCubeMap(com_ptr<ID3D11Texture2D>& pCubeMap, UINT cubeMapSize, UINT mipLevels = 1);
 	void setViewPort(UINT width, UINT hight);
-	void createTextureRTV(UINT size, com_ptr<ID3D11Texture2D>& pTexture, com_ptr<ID3D11RenderTargetView>& pTextureRTV);
+	void createTextureRTV(UINT size, com_ptr<ID3D11Texture2D>& pTexture, com_ptr<ID3D11RenderTargetView>& pTextureRTV, DXGI_FORMAT format);
 
 public:
 	HDRITextureLoader(com_ptr<ID3D11Device> const& pDevice,
