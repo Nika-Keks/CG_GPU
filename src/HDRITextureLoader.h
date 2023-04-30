@@ -72,7 +72,11 @@ public:
 					com_ptr<ID3D11DeviceContext> const& pContext,
 					com_ptr<ID3DUserDefinedAnnotation> const& pAnnotation);
 
-	void loadEnvCubeMap(std::string const& hdrFile, com_ptr<ID3D11Texture2D>& pEnvCubeMap, com_ptr<ID3D11Texture2D>& pIrrCubeMap);
+	void loadEnvCubeMap(std::string const& hdrFile, 
+					com_ptr<ID3D11Texture2D>& pEnvCubeMap, 
+					com_ptr<ID3D11Texture2D>& pIrrCubeMap, 
+					com_ptr<ID3D11Texture2D>& pPrefCubeMap,
+					com_ptr<ID3D11Texture2D>& pPreintBRDFTexture);
 
 	~HDRITextureLoader() override;
 };

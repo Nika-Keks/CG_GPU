@@ -128,7 +128,11 @@ HDRITextureLoader::HDRITextureLoader(com_ptr<ID3D11Device> const& pDevice, com_p
 }
 
 
-void HDRITextureLoader::loadEnvCubeMap(std::string const& hdrFile, com_ptr<ID3D11Texture2D>& pEnvCubeMap, com_ptr<ID3D11Texture2D>& pIrrCubeMap)
+void HDRITextureLoader::loadEnvCubeMap(std::string const& hdrFile, 
+	com_ptr<ID3D11Texture2D>& pEnvCubeMap, 
+	com_ptr<ID3D11Texture2D>& pIrrCubeMap, 
+	com_ptr<ID3D11Texture2D>& pPrefCubeMap, 
+	com_ptr<ID3D11Texture2D>& pPreintBRDFTexture)
 {
 	// read hdr file to texture & create srv
 	com_ptr<ID3D11Texture2D> pHDRTexture;
@@ -141,11 +145,9 @@ void HDRITextureLoader::loadEnvCubeMap(std::string const& hdrFile, com_ptr<ID3D1
 	renderIrrCubeMap(pEnvCubeMap, pIrrCubeMap);
 
 	// render prefiltered color
-	com_ptr<ID3D11Texture2D> pPrefCubeMap;
 	renderPreliteredCubeMap(pEnvCubeMap, pPrefCubeMap);
 
 	// rebder preintegrated BRDF
-	com_ptr<ID3D11Texture2D> pPreintBRDFTexture;
 	renderPreintBRDFTexture(pPreintBRDFTexture);
 }
 
@@ -237,7 +239,7 @@ void HDRITextureLoader::renderPreliteredCubeMap(com_ptr<ID3D11Texture2D> const& 
 	m_pDevice->CreateShaderResourceView(pEnvCubeMap.Get(), nullptr, &pEnvCubeMapSRV);
 
 	// create cube map
-	createCubeMap(pPrefCubeMap, m_prefTextureSize);
+	createCubeMap(pPrefCubeMap, m_prefTextureSize, m_mipLevels);
 
 	startEvent(L"PrefilteredColor");
 

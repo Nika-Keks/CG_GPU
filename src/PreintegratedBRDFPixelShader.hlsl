@@ -24,7 +24,7 @@ float2 IntegrateBRDF(float NdotV, float roughness)
     float A = 0.0;
     float B = 0.0;
     float3 N = float3(0.0, 1.0, 0.0);
-    static const uint SAMPLE_COUNT = 10u;
+    static const uint SAMPLE_COUNT = 1024u;
 
     for (uint i = 0u; i < SAMPLE_COUNT; ++i)
     {

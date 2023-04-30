@@ -50,6 +50,11 @@ private:
 	com_ptr<ID3D11ShaderResourceView> m_pEnvCubeMapSRV;
 	com_ptr<ID3D11Texture2D> m_pIrrCubeMap;
 	com_ptr<ID3D11ShaderResourceView> m_pIrrCubeMapSRV;
+	com_ptr<ID3D11Texture2D> m_pPrefTexture;
+	com_ptr<ID3D11ShaderResourceView> m_pPrefTextureSRV;
+	com_ptr<ID3D11Texture2D> m_pPreintBRDFTexture;
+	com_ptr<ID3D11ShaderResourceView> m_pPreintBRDFTextureSRV;
+	com_ptr<ID3D11SamplerState> m_pBRDFSampler;
 };
 
 template <typename DrawT, typename... argsT>
