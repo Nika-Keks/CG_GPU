@@ -6,10 +6,10 @@
 
 namespace DX = DirectX;
 
-EnvSphere::EnvSphere(DX::XMVECTOR const& position, float radius, wchar_t const* texturePath, Camera const& camera)
+EnvSphere::EnvSphere(DX::XMVECTOR const& position, float radius, Camera const& camera, com_ptr<ID3D11ShaderResourceView> const& pEnvCubeMapSRV)
 	: m_pVertexBuffer(nullptr)
-	, m_pTexturePath(texturePath)
 	, m_pCamera(&camera)
+	, m_pEnvCubeMapSRV(pEnvCubeMapSRV)
 {
 	for (size_t v = 0; v < s_vSamplingSize; v++)
 	{
@@ -54,11 +54,9 @@ void EnvSphere::render(
 	auto cameraPos = m_pCamera->getPos();
 	m_transform = DX::XMMatrixTranspose(DX::XMMatrixTranslation(cameraPos.x, cameraPos.y, cameraPos.z));
 	
-	pContext->PSSetShaderResources(0u, 1u, m_ShaderResourceView.GetAddressOf());
+	pContext->PSSetShaderResources(0u, 1u, m_pEnvCubeMapSRV.GetAddressOf());
 	pContext->PSSetSamplers(0, 1, m_pSamplerState.GetAddressOf());
-
-	auto& shader = ShaderLoader::get().getCopyTextureShader(pDevice, pContext);
-	shader.Set();
+	pContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0);
 
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
@@ -69,6 +67,12 @@ void EnvSphere::render(
 
 	pContext->Draw((UINT)m_vIndices.size(), 0u);
 }
+void EnvSphere::resetEndCubeMapSRV(com_ptr<ID3D11ShaderResourceView> const& pEnvCubeMapSRV)
+{
+	m_pEnvCubeMapSRV.Reset();
+	m_pEnvCubeMapSRV = pEnvCubeMapSRV;
+}
+
 void EnvSphere::initResource(
 	Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice,
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)
@@ -96,29 +100,22 @@ void EnvSphere::initResource(
 	{
 		D3D11_SAMPLER_DESC sd;
 		ZeroMemory(&sd, sizeof(sd));
-		sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		sd.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
 		sd.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 		sd.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 		sd.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-		sd.MipLODBias = 0.0f;
-		sd.MaxAnisotropy = 1;
-		sd.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-		sd.BorderColor[0] = 0;
-		sd.BorderColor[1] = 0;
-		sd.BorderColor[2] = 0;
-		sd.BorderColor[3] = 0;
+		sd.MipLODBias = 0;
 		sd.MinLOD = 0;
 		sd.MaxLOD = D3D11_FLOAT32_MAX;
 
 		pDevice->CreateSamplerState(&sd, m_pSamplerState.GetAddressOf());
+	}
 
-		CreateWICTextureFromFile(
-			pDevice.Get(),
-			pContext.Get(),
-			m_pTexturePath,
-			m_Texture.GetAddressOf(),
-			m_ShaderResourceView.GetAddressOf());
-
+	if (!m_pPixelShader) 
+	{
+		com_ptr<ID3DBlob> pBlob;
+		THROW_IF_FAILED(BaseException, D3DReadFileToBlob(L"./EnvSpherePixelShader.cso", &pBlob));
+		THROW_IF_FAILED(BaseException, pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &m_pPixelShader));
 	}
 }
 
@@ -146,7 +143,7 @@ void EnvSphere::updateModelBuffer(
 	cbd.StructureByteStride = 0u;
 	D3D11_SUBRESOURCE_DATA csd = { 0 };
 	csd.pSysMem = &cb;
-	THROW_IF_FAILED(DrawError, pDevice->CreateBuffer(&cbd, &csd, &pConstantBuffer));
+	THROW_IF_FAILED(DrawError, pDevice->CreateBuffer(&cbd, &csd, pConstantBuffer.GetAddressOf()));
 
 	// bind constant buffer to vertex shader
 	pContext->VSSetConstantBuffers(1u, 1u, pConstantBuffer.GetAddressOf());

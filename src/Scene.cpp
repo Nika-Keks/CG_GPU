@@ -1,7 +1,5 @@
 #include "Scene.h"
 #include <d3dcompiler.h>
-#include "EnvSphere.h"
-#include "Camera.h"
 
 
 void Scene::clear()
@@ -36,6 +34,7 @@ void Scene::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
 		m_environmentSphere->render(pDevice, pContext);
 		pContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0u);
 		pContext->IASetInputLayout(m_pInputLayout.Get());
+		pContext->PSSetShaderResources(0, 1, m_pIrrCubeMapSRV.GetAddressOf());
 		endEvent();
 	}
 
@@ -55,7 +54,7 @@ void Scene::render(Microsoft::WRL::ComPtr<ID3D11Device>const& pDevice,
 
 void Scene::setEnvSphere(float radius, wchar_t const* texturePath, DirectX::XMVECTOR pos, Camera const& camera)
 {
-	m_environmentSphere = std::make_shared<EnvSphere>(pos, radius, texturePath, camera);
+	m_environmentSphere = std::make_shared<EnvSphere>(pos, radius, camera, m_pEnvCubeMapSRV);
 }
 
 void Scene::initResourses(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice, Microsoft::WRL::ComPtr<ID3D11DeviceContext> const& pContext)
@@ -95,6 +94,16 @@ void Scene::initResourses(Microsoft::WRL::ComPtr<ID3D11Device> const& pDevice, M
 		));
 	}
 
+	if (!m_pHDRLoader)
+		m_pHDRLoader = std::make_shared<HDRITextureLoader>(pDevice, pContext, m_pAnnotation);
+	if (!m_pEnvCubeMap)
+	{
+		m_pHDRLoader->loadEnvCubeMap("./../../image/misty_farm_road_4k.hdr", m_pEnvCubeMap, m_pIrrCubeMap);
+		THROW_IF_FAILED(DrawError, pDevice->CreateShaderResourceView(m_pEnvCubeMap.Get(), nullptr, m_pEnvCubeMapSRV.GetAddressOf()));
+		THROW_IF_FAILED(DrawError, pDevice->CreateShaderResourceView(m_pIrrCubeMap.Get(), nullptr, m_pIrrCubeMapSRV.GetAddressOf()));
+		if (m_environmentSphere)
+			m_environmentSphere->resetEndCubeMapSRV(m_pEnvCubeMapSRV);
+	}
 	update(pDevice, pContext);
 }
 

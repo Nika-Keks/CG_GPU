@@ -17,9 +17,9 @@ App::App()
 {
 	AddSpheresGrid();
 	m_scene.setEnvSphere(1000.f, s_envSphereTexturePath, DX::XMVectorSet(0.f, 0.f, -10.f, 1.f), m_camera);
-	m_lightModel.addPointLight(DX::XMVectorSet(1.f, 0.f, -10.f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 50);
-	m_lightModel.addPointLight(DX::XMVectorSet(0.f, 0.f, -10.f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 50);
-	m_lightModel.addPointLight(DX::XMVectorSet(-1.f, 0.f, -10.f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 50);
+	//m_lightModel.addPointLight(DX::XMVectorSet(1.f, 0.f, -10.f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 5);
+	//m_lightModel.addPointLight(DX::XMVectorSet(0.f, 0.f, -10.f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 5);
+	//m_lightModel.addPointLight(DX::XMVectorSet(-1.f, 0.f, -10.f, 0.f), DX::XMVectorSet(1, 1, 1, 1), 5);
 }
 
 int App::Go()
