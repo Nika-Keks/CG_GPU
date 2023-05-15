@@ -1,6 +1,7 @@
 #include "HDRI.hlsli"
 
 Texture2D HDRTexture : register(t0);
+SamplerState EnvSampler : register(s0);
 
 float4 main(OutputVS vsout) : SV_TARGET
 {

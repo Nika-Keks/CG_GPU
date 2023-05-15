@@ -265,6 +265,9 @@
     <None Include="src\HDRI.hlsli">
       <Filter>src\shaders\HDRI</Filter>
     </None>
+    <None Include="src\SpecularHeader.hlsli">
+      <Filter>src\shaders\HDRI</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\BrightnessShader.hlsl">
@@ -297,10 +300,16 @@
     <FxCompile Include="src\HDRtoEnvVertexShader.hlsl">
       <Filter>src\shaders\HDRI</Filter>
     </FxCompile>
-    <FxCompile Include="EnvSpherePixelShader.hlsl">
+    <FxCompile Include="src\IRRPixelShader.hlsl">
+      <Filter>src\shaders\HDRI</Filter>
+    </FxCompile>
+    <FxCompile Include="src\PrefilteredPixelShader.hlsl">
+      <Filter>src\shaders\HDRI</Filter>
+    </FxCompile>
+    <FxCompile Include="src\EnvSpherePixelShader.hlsl">
       <Filter>src\shaders</Filter>
     </FxCompile>
-    <FxCompile Include="src\IRRPixelShader.hlsl">
+    <FxCompile Include="src\PreintegratedBRDFPixelShader.hlsl">
       <Filter>src\shaders\HDRI</Filter>
     </FxCompile>
   </ItemGroup>

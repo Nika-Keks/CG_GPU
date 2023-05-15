@@ -1,7 +1,11 @@
 #include "PBRPixelShader.cginc"
 
-TextureCube IrrCubeMap : register(t0);
-SamplerState IrrMapSampler : register(s0);
+TextureCube DiffuseIrradianceMap : register(t0);
+TextureCube EnvMap : register(t1);
+Texture2D BRDFLut : register(t2);
+
+SamplerState MinMagMipLinear : register(s0);
+SamplerState MinMagLinearMipPointBorder : register(s1);
 
 
 float normalDistribution(float3 wPos, float3 norm, int lightIdx)
@@ -71,14 +75,23 @@ float4 main(PSInput input) : SV_TARGET
 	}
 
 	float3 wPos = normalize(input.wPos.xyz);
+	float3 v = toCamera(input.wPos);
 	float3 n = normalize(input.norm.xyz);
+	float3 r = normalize(2.0f * dot(v, n) * n - v);
+
+	static const float MAX_REFLECTION_LOD = 4.0;
+	float3 prefilteredColor = EnvMap.SampleLevel(MinMagMipLinear, r, roughness * MAX_REFLECTION_LOD);
+	float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo.xyz, metalness);
 	float3 F = FresnelSchlickRoughnessFunction(wPos, n);
+	float2 envBRDF = BRDFLut.Sample(MinMagLinearMipPointBorder, float2(max(dot(n, v), 0.0), roughness));
+	float3 specular = prefilteredColor * (F0 * envBRDF.x + envBRDF.y);
+	
 	float3 kS = F;
 	float3 kD = float3(1.0, 1.0, 1.0) - kS;
 	kD *= 1.0 - metalness;
-	float3 irradiance = IrrCubeMap.Sample(IrrMapSampler, n).rgb;
-	float3 diffuse = irradiance * albedo.xyz;
-	float3 ambient = kD * diffuse;
-	
+	float3 irradiance = DiffuseIrradianceMap.Sample(MinMagMipLinear, n);
+	float3 diffuse = irradiance * albedo;
+	float3 ambient = (kD * diffuse + specular);
+
 	return float4(result + ambient, 1);
 }
